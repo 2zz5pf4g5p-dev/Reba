@@ -17,7 +17,7 @@ access code from the owner. Only the owner can delete videos.
 Open http://localhost:3000
 
 ## Using it
-1. Tap "Owner login" at the bottom and enter ADMIN_PASSWORD.
+1. Open your site address followed by /#owner (for example https://yoursite.onrender.com/#owner) and enter ADMIN_PASSWORD. Visitors never see this link.
 2. In the Owner panel, create a code for each person and send it to them.
 3. Read contact messages in the same panel. Revoke a code to lock someone out instantly.
 
