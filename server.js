@@ -56,6 +56,22 @@ function getJwtSecret() {
   return process.env.JWT_SECRET || process.env.JWT_KEY || '';
 }
 
+function getOptionalUser(req) {
+  const secret = getJwtSecret();
+  if (!secret) return null;
+  const authHeader = req.headers.authorization || '';
+  const tokenFromHeader = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : '';
+  const token = tokenFromHeader || req.headers['x-auth-token'] || req.body?.token || '';
+  if (!token) return null;
+  try {
+    return jwt.verify(token, secret);
+  } catch (err) {
+    return null;
+  }
+}
+
 function requireOwner(req, res, next) {
   const secret = getJwtSecret();
   const authHeader = req.headers.authorization || '';
@@ -121,6 +137,16 @@ async function initDb() {
       url TEXT NOT NULL,
       views INTEGER DEFAULT 0,
       likes INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id SERIAL PRIMARY KEY,
+      sender TEXT NOT NULL,
+      role TEXT DEFAULT 'guest',
+      message TEXT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
@@ -197,6 +223,7 @@ app.post(['/api/access-code', '/api/verify-code'], async (req, res) => {
 // List uploaded videos
 app.get('/api/videos', async (req, res) => {
   const sort = String(req.query?.sort || 'new').toLowerCase();
+  const search = String(req.query?.q || '').trim().toLowerCase();
   let orderBy = 'id DESC';
   if (sort === 'views' || sort === 'most_viewed') {
     orderBy = 'views DESC, id DESC';
@@ -210,7 +237,14 @@ app.get('/api/videos', async (req, res) => {
        FROM videos
        ORDER BY ${orderBy}`
     );
-    res.json(rows);
+    const filtered = search
+      ? rows.filter(
+          (v) =>
+            String(v.title || '').toLowerCase().includes(search) ||
+            String(v.description || '').toLowerCase().includes(search)
+        )
+      : rows;
+    res.json(filtered);
   } catch (err) {
     console.error('GET /api/videos error:', err);
     res.status(500).json({ error: 'Failed to load videos' });
@@ -248,6 +282,49 @@ app.post(
     }
   }
 );
+
+// In-app chat routes backed by Postgres
+app.get('/api/chat', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, sender, role, message, created_at
+       FROM chat_messages
+       ORDER BY id ASC
+       LIMIT 100`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /api/chat error:', err);
+    res.status(500).json({ error: 'Failed to load chat messages' });
+  }
+});
+
+app.post('/api/chat', async (req, res) => {
+  const user = getOptionalUser(req);
+  const role = user?.role === 'owner' ? 'owner' : 'guest';
+  const sender =
+    role === 'owner'
+      ? 'Owner'
+      : String(req.body?.sender || 'Guest').trim().slice(0, 40) || 'Guest';
+  const message = String(req.body?.message || req.body?.body || '').trim().slice(0, 1000);
+
+  if (!message) {
+    return res.status(400).json({ error: 'Message cannot be empty' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO chat_messages (sender, role, message)
+       VALUES ($1, $2, $3)
+       RETURNING id, sender, role, message, created_at`,
+      [sender, role, message]
+    );
+    return res.status(201).json({ ok: true, message: rows[0] });
+  } catch (err) {
+    console.error('POST /api/chat error:', err);
+    return res.status(500).json({ error: 'Failed to send chat message' });
+  }
+});
 
 app.get('/api/comments', async (req, res) => {
   try {

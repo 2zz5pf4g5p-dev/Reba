@@ -3,1653 +3,452 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reba — Find leaks here</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <title>REBA</title>
   <style>
-    :root {
-      --bg-void: #050507;
-      --bg-elev: #0e0a0c;
-      --bg-card: #130b0e;
-      --bg-input: #090608;
-      --red-hot: #ff1e2d;
-      --red-strong: #e10613;
-      --red-deep: #8b0008;
-      --red-glow: rgba(255, 20, 35, 0.35);
-      --border-red: #521118;
-      --border-bright: #ff1e2d;
-      --text-main: #f9f4f5;
-      --text-muted: #b5999f;
-      --font-display: 'Chakra Petch', system-ui, sans-serif;
-      --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-      --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-    }
-
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      font-family: var(--font-body);
-      background:
-        radial-gradient(circle at 50% -8%, rgba(225, 6, 19, 0.24), transparent 52%),
-        linear-gradient(180deg, #090507 0%, var(--bg-void) 45%, #060405 100%);
-      color: var(--text-main);
-      min-height: 100vh;
+      padding: 16px;
+      background: #09090b;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-
-    .wrap { max-width: 860px; margin: 0 auto; padding: 16px 16px 84px; }
-
-    /* Top bar */
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+    }
     .topbar {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
       gap: 10px;
-      padding: 12px 14px;
-      background: rgba(16, 8, 11, 0.9);
-      border: 1px solid var(--border-red);
-      border-radius: 18px;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 30, 45, 0.22);
+      align-items: center;
       margin-bottom: 14px;
-      position: sticky;
-      top: 10px;
-      z-index: 20;
-      backdrop-filter: blur(10px);
     }
-
     .brand {
-      font-family: var(--font-display);
-      font-size: 23px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--red-hot);
-      text-shadow: 0 0 16px var(--red-glow);
-      text-decoration: none;
-      margin-right: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #ef4444;
+      font-size: 1.2rem;
+      white-space: nowrap;
     }
-
-    .search {
-      flex: 1;
-      min-width: 170px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-red);
-      color: var(--text-main);
-      padding: 9px 14px;
-      border-radius: 999px;
-      font-family: var(--font-body);
-      font-size: 14px;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .search:focus {
-      outline: none;
-      border-color: var(--red-hot);
-      box-shadow: 0 0 0 3px rgba(255, 30, 45, 0.2);
-    }
-
-    /* Big Top Intro Banner */
-    .hero-intro {
-      background:
-        radial-gradient(circle at 85% 20%, rgba(255, 30, 45, 0.22), transparent 55%),
-        linear-gradient(135deg, #1b090e 0%, #10070a 60%, #19080d 100%);
-      border: 1px solid var(--border-red);
-      border-left: 5px solid var(--red-hot);
-      border-radius: 18px;
-      padding: 24px 22px;
-      margin-bottom: 16px;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.72), 0 0 24px rgba(225, 6, 19, 0.14);
-    }
-    .hero-kicker {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      text-transform: uppercase;
-      letter-spacing: 1.4px;
-      color: #ff7b84;
-      margin-bottom: 6px;
-    }
-    .hero-title {
-      font-family: var(--font-display);
-      font-size: clamp(32px, 6vw, 48px);
-      font-weight: 700;
-      text-transform: uppercase;
-      line-height: 1.03;
-      letter-spacing: 1px;
-      margin: 0 0 10px;
-      color: #ffffff;
-      text-shadow: 0 0 22px rgba(255, 30, 45, 0.38);
-    }
-    .hero-title span {
-      color: var(--red-hot);
-    }
-    .hero-sub {
-      margin: 0;
-      font-size: 14.5px;
-      line-height: 1.5;
-      color: var(--text-muted);
-      max-width: 660px;
-    }
-
-    .btn-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-    .top-actions { margin-bottom: 18px; }
-    .bottom-actions {
-      margin-top: 26px;
-      padding: 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-red);
-      border-radius: 18px;
-      justify-content: space-between;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    }
-    .bottom-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-    button, .btn, select {
-      font-family: var(--font-display);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      background: linear-gradient(180deg, #1e0b10 0%, #12070a 100%);
-      color: var(--text-main);
-      border: 1px solid var(--border-red);
-      border-radius: 999px;
-      padding: 8px 15px;
-      font-size: 12.5px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
-    }
-    button:hover, .btn:hover {
-      border-color: var(--red-hot);
-      box-shadow: 0 0 14px var(--red-glow);
-      transform: translateY(-1px);
-    }
-    button:active { transform: translateY(0); }
-
-    select {
-      font-family: var(--font-body);
-      text-transform: none;
-      letter-spacing: 0;
+    input, textarea, button, select {
+      font: inherit;
       border-radius: 10px;
-      background: var(--bg-input);
-    }
-
-    button.primary {
-      background: linear-gradient(180deg, var(--red-hot) 0%, var(--red-strong) 100%);
-      color: #ffffff;
-      border-color: var(--red-hot);
-      box-shadow: 0 4px 16px rgba(225, 6, 19, 0.42);
-    }
-    button.primary:hover {
-      background: linear-gradient(180deg, #ff3644 0%, var(--red-hot) 100%);
-      border-color: #ff4d59;
-      box-shadow: 0 0 20px rgba(255, 30, 45, 0.65);
-    }
-
-    button.danger {
-      background: linear-gradient(180deg, #4a060c 0%, #260306 100%);
-      color: #ff8e96;
-      border-color: var(--red-strong);
-      padding: 5px 11px;
-      font-size: 11.5px;
-    }
-    button.danger:hover {
-      background: var(--red-strong);
-      color: #ffffff;
-    }
-
-    button.ghost {
-      background: rgba(255, 30, 45, 0.06);
-      border-color: #3d1218;
-      color: var(--text-muted);
-    }
-    button.ghost:hover {
-      color: #ffffff;
-      border-color: var(--red-hot);
-    }
-
-    button.active-tab {
-      background: linear-gradient(180deg, var(--red-strong) 0%, #6b0309 100%);
-      color: #ffffff;
-      border-color: var(--red-hot);
-      box-shadow: 0 0 14px var(--red-glow);
-    }
-
-    .card {
-      background: linear-gradient(180deg, #160b0f 0%, var(--bg-card) 100%);
-      border: 1px solid var(--border-red);
-      border-left: 4px solid var(--red-strong);
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65);
-    }
-
-    h2, h3 {
-      font-family: var(--font-display);
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
-      margin: 0 0 10px;
-      color: #ffffff;
-    }
-    h2 { font-size: 18px; }
-    h3 { font-size: 14px; color: #ff6b75; margin-top: 14px; }
-
-    label {
-      display: block;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin: 10px 0 5px;
-    }
-
-    input, textarea {
-      width: 100%;
-      background: var(--bg-input);
-      border: 1px solid var(--border-red);
-      color: var(--text-main);
-      border-radius: 10px;
+      border: 1px solid #27272a;
+      background: #141418;
+      color: #f4f4f5;
       padding: 10px 12px;
-      font-family: var(--font-body);
-      font-size: 14px;
-      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    input:focus, textarea:focus, select:focus {
-      outline: none;
-      border-color: var(--red-hot);
-      box-shadow: 0 0 0 3px rgba(255, 30, 45, 0.18);
+    input[type="search"], input[type="text"], input[type="password"] {
+      width: 100%;
     }
-    textarea { min-height: 82px; resize: vertical; }
-
-    .msg-err {
-      font-family: var(--font-mono);
-      color: #ff5c68;
-      font-size: 12.5px;
-      margin-top: 8px;
+    .btn {
+      cursor: pointer;
+      font-weight: 700;
+      border: none;
     }
-    .msg-ok {
-      font-family: var(--font-mono);
-      color: #ff9ba2;
-      font-size: 12.5px;
-      margin-top: 8px;
+    .btn-red {
+      background: #dc2626;
+      color: #fff;
     }
-
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 14px;
+    .btn-dark {
+      background: #18181b;
+      color: #f4f4f5;
+      border: 1px solid #2e2e36;
     }
-
-    .video-tile {
-      background: linear-gradient(160deg, #190b10 0%, #0d0709 100%);
-      border: 1px solid var(--border-red);
+    .panel {
+      background: #111115;
+      border: 1px solid #27272a;
       border-radius: 14px;
-      padding: 15px;
-      cursor: pointer;
-      transition: transform 0.14s, border-color 0.15s, box-shadow 0.15s;
+      padding: 14px;
+      margin-bottom: 14px;
     }
-    .video-tile:hover {
-      border-color: var(--red-hot);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(225, 6, 19, 0.28);
-    }
-    .video-title {
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: 0.4px;
-      color: #ffffff;
-    }
-
-    .meta {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--text-muted);
-      margin-top: 7px;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid var(--border-red);
-      background: #000;
-      max-height: 450px;
-    }
-
-    .comment {
-      border-top: 1px solid #2a0d12;
-      padding: 11px 0;
+    .stack {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       gap: 10px;
-      align-items: flex-start;
     }
-    .comment:first-child { border-top: none; }
-    .comment-author {
-      font-family: var(--font-mono);
-      font-weight: 600;
-      font-size: 12px;
-      color: #ff6b75;
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
     }
-
-    .dm-box {
-      background: var(--bg-input);
-      border: 1px solid var(--border-red);
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+      flex-wrap: wrap;
+    }
+    .tab.active {
+      background: #dc2626;
+      color: #fff;
+      border-color: #dc2626;
+    }
+    .video-card {
+      background: #111115;
+      border: 1px solid #27272a;
       border-radius: 12px;
-      padding: 10px 12px;
-      max-height: 240px;
-      overflow-y: auto;
+      padding: 12px;
       margin-bottom: 10px;
     }
-    .dm-item {
-      padding: 7px 0;
-      border-bottom: 1px solid #21090e;
-      font-size: 13.5px;
+    video {
+      width: 100%;
+      border-radius: 10px;
+      background: #000;
+      margin-top: 8px;
     }
-    .dm-item:last-child { border-bottom: none; }
-    .dm-sender {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--red-hot);
+    .chat-box {
+      max-height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      background: #0b0b0e;
+      border: 1px solid #222228;
+      border-radius: 10px;
+      margin-bottom: 10px;
     }
-
-    .pill {
-      display: inline-block;
-      font-family: var(--font-mono);
-      padding: 5px 11px;
-      border-radius: 999px;
-      background: rgba(225, 6, 19, 0.16);
-      border: 1px solid var(--red-strong);
-      font-size: 11.5px;
-      color: #ff8c94;
+    .msg {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #16161c;
+      font-size: 0.92rem;
     }
-
-    .code-prompt-box {
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 12px;
-      background: rgba(225, 6, 19, 0.08);
-      border: 1px solid var(--red-strong);
+    .msg-meta {
+      font-size: 0.76rem;
+      color: #a1a1aa;
+      margin-bottom: 3px;
     }
-
-    .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-    .corner-profile-btn {
-      position: fixed;
-      right: 16px;
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-      z-index: 9999;
-      padding: 10px 16px;
-      background: linear-gradient(180deg, #ff1e2d 0%, #c80511 100%);
-      color: #ffffff;
-      border: 1px solid #ff4d59;
-      border-radius: 999px;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.85), 0 0 18px rgba(255, 30, 45, 0.45);
+    .badge-owner {
+      color: #f87171;
+      font-weight: 700;
     }
-    .hidden { display: none !important; }
+    .muted {
+      color: #a1a1aa;
+      font-size: 0.88rem;
+    }
+    .hidden {
+      display: none;
+    }
+    .status-msg {
+      font-size: 0.88rem;
+      margin-top: 6px;
+      color: #fca5a5;
+    }
+    .ok-msg {
+      color: #86efac;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <a class="brand" href="#" onclick="showHome(); return false;">&#9654; Reba</a>
-      <input id="searchInput" class="search" type="search" placeholder="Search videos" oninput="loadVideos()" />
-      <select id="langSelect" aria-label="Language" onchange="setLanguage(this.value)" style="min-width: 145px;">
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="rw">Kinyarwanda / Kirundi</option>
-      </select>
+      <div class="brand">&#9654; REBA</div>
+      <input type="search" id="search-input" placeholder="Search videos" />
     </div>
 
-    <!-- Big Top Introduction -->
-    <section class="hero-intro" aria-label="Introduction">
-      <div class="hero-kicker">Reba &middot; All-Access Code &middot; Stream Only &middot; No Downloads</div>
-      <h1 class="hero-title">Find leaks <span>here</span></h1>
-      <p class="hero-sub">One access code unlocks every video uploaded here. Stream directly in your browser with downloads disabled.</p>
-    </section>
-
-    <!-- Top Action Buttons -->
-    <div id="topActions" class="btn-bar top-actions">
-      <button class="btnUnlock primary" onclick="openAuthModal('code')">Enter access code</button>
-      <button class="btnUnlock" onclick="openAuthModal('register')">Create account / Sign in</button>
-      <button class="btnContact" onclick="openContactModal()">Contact owner</button>
-      <span class="userBadge pill hidden"></span>
-      <button class="btnInboxToggle hidden" onclick="toggleUserInbox()">Messages from owner</button>
-      <button class="btnUploadToggle hidden" onclick="toggleUpload()">Upload video</button>
-      <button class="btnOwnerPanelToggle hidden" onclick="toggleOwnerPanel()">Owner panel</button>
-      <button class="btnLogout ghost hidden" onclick="logout()">Log out</button>
-    </div>
-
-    <!-- Auth Card (Access Code, Create Account, User Sign In, Owner Login) -->
-    <div id="authCard" class="card hidden">
-      <div class="tabs">
-        <button id="tabCode" class="active-tab" onclick="switchAuthTab('code')">Access code (All videos)</button>
-        <button id="tabRegister" class="ghost" onclick="switchAuthTab('register')">Create account</button>
-        <button id="tabLogin" class="ghost" onclick="switchAuthTab('login')">User sign in</button>
-        <button id="tabOwner" class="ghost" onclick="switchAuthTab('owner')">Owner login</button>
+    <div class="panel stack">
+      <div class="row">
+        <button class="btn btn-red" id="open-owner-btn" type="button">OWNER LOGIN / UPLOAD</button>
+        <button class="btn btn-dark" id="open-code-btn" type="button">ENTER ACCESS CODE</button>
+        <button class="btn btn-dark" id="toggle-chat-btn" type="button">IN-APP CHAT</button>
       </div>
-
-      <form id="formCode" onsubmit="submitCode(event)">
-        <h2>Redeem access code</h2>
-        <div class="meta" style="margin-bottom:8px;">Each code is single-use (1 person only) and unlocks every video uploaded on Reba.</div>
-        <label>Access code</label>
-        <input id="codeInput" type="text" placeholder="XXXXX-XXXXX" required />
-        <div style="margin-top:12px; display:flex; gap:8px;">
-          <button type="submit" class="primary">Unlock all videos</button>
-          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
-        </div>
-      </form>
-
-      <form id="formRegister" class="hidden" onsubmit="submitRegister(event)">
-        <h2>Create an account</h2>
-        <label>Username</label>
-        <input id="regUsername" type="text" placeholder="3-30 chars (letters, numbers, ._ -)" required />
-        <label>Password</label>
-        <input id="regPassword" type="password" placeholder="At least 6 characters" required />
-        <div style="margin-top:12px; display:flex; gap:8px;">
-          <button type="submit" class="primary">Create account</button>
-          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
-        </div>
-      </form>
-
-      <form id="formLogin" class="hidden" onsubmit="submitLogin(event)">
-        <h2>Sign in</h2>
-        <label>Username</label>
-        <input id="loginUsername" type="text" required />
-        <label>Password</label>
-        <input id="loginPassword" type="password" required />
-        <div style="margin-top:12px; display:flex; gap:8px;">
-          <button type="submit" class="primary">Sign in</button>
-          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
-        </div>
-      </form>
-
-      <form id="formOwner" class="hidden" onsubmit="submitOwnerLogin(event)">
-        <h2>Owner login</h2>
-        <label>Owner password</label>
-        <input id="ownerPassword" type="password" placeholder="Owner password" required />
-        <div style="margin-top:12px; display:flex; gap:8px;">
-          <button type="submit" class="primary">Log in</button>
-          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
-        </div>
-      </form>
-
-      <div id="authMsg"></div>
+      <div id="owner-status-bar" class="muted">Status: Guest view (log in as owner to upload videos)</div>
     </div>
 
-    <!-- Account Holder Inbox -->
-    <div id="userInboxCard" class="card hidden">
-      <h2>Direct messages with owner</h2>
-      <div id="userDmThread" class="dm-box"></div>
-      <form onsubmit="sendUserDm(event)" style="display:flex; gap:8px;">
-        <input id="userDmInput" type="text" placeholder="Message the owner..." required />
-        <button type="submit" class="primary">Send</button>
-      </form>
-      <div id="userDmMsg"></div>
-    </div>
-
-    <!-- Contact / Request View Code Card -->
-    <div id="contactCard" class="card hidden">
-      <h2 id="contactTitle">Contact owner</h2>
-      <form onsubmit="submitContact(event)">
-        <label>Your name</label>
-        <input id="cName" type="text" required />
-        <label>How to reach you</label>
-        <input id="cContact" type="text" required />
-        <label>Message</label>
-        <textarea id="cBody" required></textarea>
-        <div style="margin-top:12px; display:flex; gap:8px;">
-          <button type="submit" class="primary">Send message</button>
-          <button type="button" class="ghost" onclick="closeContactModal()">Close</button>
-        </div>
-      </form>
-      <div id="contactMsg"></div>
-    </div>
-
-    <!-- Upload Card -->
-    <div id="uploadCard" class="card hidden">
-      <h2>Upload video</h2>
-      <form onsubmit="submitUpload(event)">
-        <label>Title</label>
-        <input id="vTitle" type="text" required />
-        <label>Description</label>
-        <textarea id="vDescr"></textarea>
-        <label>Video file</label>
-        <input id="vFile" type="file" accept="video/*" required />
-        <div style="margin-top:12px; display:flex; gap:8px;">
-          <button type="submit" class="primary">Upload</button>
-          <button type="button" class="ghost" onclick="toggleUpload(false)">Cancel</button>
-        </div>
-      </form>
-      <div id="uploadMsg"></div>
-    </div>
-
-    <!-- Owner Panel -->
-    <div id="ownerPanel" class="card hidden">
-      <h2>Owner panel</h2>
-
-      <h3>Message an account user</h3>
-      <form onsubmit="sendOwnerDm(event)" style="margin-bottom:14px;">
-        <label>Select user account</label>
-        <select id="ownerDmUser" onchange="loadOwnerDmThread()" required></select>
-        <div id="ownerDmThread" class="dm-box" style="margin-top:10px;"></div>
-        <div style="display:flex; gap:8px;">
-          <input id="ownerDmInput" type="text" placeholder="Write a message to this user..." required />
-          <button type="submit" class="primary">Send</button>
-        </div>
-        <div id="ownerDmMsg"></div>
-      </form>
-
-      <h3>Generate access code (unlocks every video)</h3>
-      <form onsubmit="createCode(event)" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
-        <input id="codeLabel" type="text" placeholder="Label for new all-access code" style="flex:1; min-width:180px;" required />
-        <button type="submit" class="primary">Generate code</button>
-      </form>
-      <div id="codesList" class="meta"></div>
-
-      <h3>Recent comments (author &amp; timestamp)</h3>
-      <div id="ownerCommentsList" class="meta"></div>
-
-      <h3>Contact messages</h3>
-      <div id="messagesList" class="meta"></div>
-    </div>
-
-    <!-- Active Video Player & Comments -->
-    <div id="playerCard" class="card hidden">
-      <button class="ghost" style="margin-bottom:10px;" onclick="closePlayer()">&larr; Back to videos</button>
-      <video id="videoPlayer" controls controlsList="nodownload noplaybackrate" disablePictureInPicture oncontextmenu="return false;"></video>
-      <div class="meta" style="margin-top:6px;">Streaming only &mdash; downloading is disabled.</div>
-      <h2 id="pTitle" style="margin-top:12px;"></h2>
-      <div id="pMeta" class="meta"></div>
-      <p id="pDescr" style="white-space:pre-wrap; margin:10px 0;"></p>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
-        <button id="btnLike" type="button" onclick="toggleLike()">Like · <span id="likeCount">0</span></button>
-        <button id="btnCommentCount" type="button" onclick="jumpToComments()">Comments · <span id="commentCount">0</span></button>
-        <button id="btnShareVideo" type="button" class="ghost" onclick="shareVideo(currentVideoId)">Share</button>
-        <button id="btnDeleteVideo" type="button" class="danger hidden" onclick="deleteVideo()">Delete video</button>
+    <!-- Owner Login Box -->
+    <div class="panel stack" id="owner-login-panel">
+      <strong>OWNER LOGIN</strong>
+      <input type="password" id="owner-password-input" placeholder="Enter OWNER PASSWORD" autocomplete="current-password" />
+      <div class="row">
+        <button class="btn btn-red" id="owner-login-submit" type="button">LOG IN</button>
+        <button class="btn btn-dark" id="owner-logout-btn" type="button">LOG OUT</button>
       </div>
-      <div id="shareNotice" class="msg-ok" style="margin-top:-6px; margin-bottom:10px;"></div>
-
-      <h3>Comments</h3>
-      <form onsubmit="postComment(event)" style="display:flex; gap:8px; margin-bottom:12px;">
-        <input id="commentInput" type="text" placeholder="Write a comment..." required />
-        <button type="submit" class="primary">Post</button>
-      </form>
-      <div id="commentsList"></div>
+      <div id="owner-login-msg" class="status-msg"></div>
     </div>
 
-    <!-- Account / Session Profile Card -->
-    <div id="profileCard" class="card hidden">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-        <h2 id="profileTitle" style="margin:0;">Profile</h2>
-        <button type="button" class="ghost" onclick="toggleProfileCard(false)">Close</button>
+    <!-- Upload Video Box (Always visible in UI so you can find it immediately, requires Owner login to post) -->
+    <div class="panel stack" id="upload-panel">
+      <strong>UPLOAD VIDEO</strong>
+      <form id="upload-form" class="stack" enctype="multipart/form-data">
+        <input type="text" id="upload-title" name="title" placeholder="Video title" required />
+        <input type="text" id="upload-desc" name="description" placeholder="Description (optional)" />
+        <input type="file" id="upload-file" name="video" accept="video/*" required />
+        <button class="btn btn-red" type="submit">UPLOAD VIDEO</button>
+      </form>
+      <div id="upload-msg" class="status-msg"></div>
+    </div>
+
+    <!-- Access Code Box -->
+    <div class="panel stack hidden" id="code-panel">
+      <strong>ACCESS CODE</strong>
+      <input type="text" id="access-code-input" placeholder="Enter access code" />
+      <button class="btn btn-red" id="access-code-submit" type="button">UNLOCK</button>
+      <div id="access-code-msg" class="status-msg"></div>
+    </div>
+
+    <!-- In-App Chat -->
+    <div class="panel stack" id="chat-panel">
+      <div class="row" style="justify-content: space-between;">
+        <strong>IN-APP CHAT</strong>
+        <span class="muted" id="chat-sync-label">Live sync</span>
       </div>
-      <div id="profileSummary" class="meta"></div>
-      <div style="margin-top:12px;">
-        <label id="profileLangLabel" for="profileLangSelect" style="margin-top:0;">Language / Langue / Ururimi</label>
-        <select id="profileLangSelect" onchange="setLanguage(this.value)" style="max-width:260px;">
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-          <option value="rw">Kinyarwanda / Kirundi</option>
-        </select>
+      <div class="chat-box" id="chat-messages">
+        <div class="muted">Loading messages...</div>
       </div>
-      <div id="profileActions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+      <form id="chat-form" class="stack">
+        <input type="text" id="chat-sender" placeholder="Your name (optional)" />
+        <div class="row">
+          <input type="text" id="chat-input" placeholder="Type a message..." style="flex: 1;" required />
+          <button class="btn btn-red" type="submit">SEND</button>
+        </div>
+      </form>
+      <div id="chat-msg" class="status-msg"></div>
     </div>
 
     <!-- Video Feed -->
-    <div id="feedSection">
-      <div class="btn-bar" style="margin-bottom: 12px;">
-        <button id="sortNewBtn" type="button" class="active-tab" onclick="setVideoSort('new')">New</button>
-        <button id="sortViewsBtn" type="button" class="ghost" onclick="setVideoSort('views')">Most viewed</button>
-        <button id="sortLikesBtn" type="button" class="ghost" onclick="setVideoSort('likes')">Most liked</button>
-      </div>
-      <div id="videoGrid" class="video-grid"></div>
+    <div class="tabs">
+      <button class="btn btn-dark tab active" data-sort="new" type="button">NEW</button>
+      <button class="btn btn-dark tab" data-sort="views" type="button">MOST VIEWED</button>
+      <button class="btn btn-dark tab" data-sort="likes" type="button">MOST LIKED</button>
     </div>
 
-    <!-- Bottom-Right Profile Button -->
-    <button id="cornerProfileBtn" type="button" class="corner-profile-btn" onclick="handleCornerProfileClick()">Profile</button>
-
-
+    <div id="videos-list">
+      <div class="muted">Loading videos...</div>
+    </div>
   </div>
 
   <script>
-    let me = null;
-    let currentVideoId = null;
+    const TOKEN_KEY = 'reba_owner_token';
     let currentSort = 'new';
-    let videosCache = [];
-    let currentLang = 'en';
-    try {
-      const savedLang = localStorage.getItem('reba_lang');
-      if (savedLang && ['en', 'fr', 'rw'].includes(savedLang)) currentLang = savedLang;
-    } catch {}
 
-    const I18N = {
-      en: {
-        searchPlaceholder: 'Search videos',
-        heroKicker: 'Reba · All-Access Code · Stream Only · No Downloads',
-        heroTitleHtml: 'Find leaks <span>here</span>',
-        heroSub: 'One access code unlocks every video uploaded here. Stream directly in your browser with downloads disabled.',
-        enterCode: 'Enter access code',
-        createOrSignIn: 'Create account / Sign in',
-        contactOwner: 'Contact owner',
-        messagesFromOwner: 'Messages from owner',
-        uploadVideo: 'Upload video',
-        ownerPanel: 'Owner panel',
-        logout: 'Log out',
-        tabCode: 'Access code (All videos)',
-        tabRegister: 'Create account',
-        tabLogin: 'User sign in',
-        tabOwner: 'Owner login',
-        redeemTitle: 'Redeem access code',
-        redeemSub: 'Each code is single-use (1 person only) and unlocks every video uploaded on Reba.',
-        accessCodeLabel: 'Access code',
-        unlockAll: 'Unlock all videos',
-        close: 'Close',
-        createAccTitle: 'Create an account',
-        usernameLabel: 'Username',
-        usernamePlaceholder: '3-30 chars (letters, numbers, ._ -)',
-        passwordLabel: 'Password',
-        passwordPlaceholder: 'At least 6 characters',
-        createAccBtn: 'Create account',
-        signInTitle: 'Sign in',
-        signInBtn: 'Sign in',
-        ownerLoginTitle: 'Owner login',
-        ownerPassLabel: 'Owner password',
-        ownerPassPlaceholder: 'Owner password',
-        logInBtn: 'Log in',
-        dmWithOwnerTitle: 'Direct messages with owner',
-        dmOwnerPlaceholder: 'Message the owner...',
-        send: 'Send',
-        yourName: 'Your name',
-        howToReach: 'How to reach you',
-        messageLabel: 'Message',
-        sendMessage: 'Send message',
-        contactSent: 'Message sent! The owner will review your request.',
-        uploadTitle: 'Upload video',
-        titleLabel: 'Title',
-        descrLabel: 'Description',
-        videoFileLabel: 'Video file',
-        uploadBtn: 'Upload',
-        cancel: 'Cancel',
-        uploadedOk: 'Uploaded!',
-        backToVideos: '← Back to videos',
-        streamOnlyNotice: 'Streaming only — downloading is disabled.',
-        likeBtnPrefix: 'Like (',
-        deleteVideo: 'Delete video',
-        commentsTitle: 'Comments',
-        commentPlaceholder: 'Write a comment...',
-        postBtn: 'Post',
-        noComments: 'No comments yet.',
-        noVideos: 'No videos yet.',
-        byAuthor: 'by',
-        viewsWord: 'views',
-        likesWord: 'likes',
-        askForCode: 'Ask for a code',
-        likeCountBtn: (n) => `Like · ${n}`,
-        commentCountBtn: (n) => `Comments · ${n}`,
-        shareBtn: 'Share',
-        linkCopied: 'Link copied!',
-        singleUseNote: 'Each view code is single-use and locks to the first person who redeems it.',
-        statusUsed: 'Used (1 person)',
-        statusUnused: 'Unused (1-time)',
-        profileBtn: 'Profile',
-        profileTitle: 'Profile',
-        languageLabel: 'Language',
-        statusLocked: 'Locked (preview only)',
-        statusUnlocked: 'Unlocked (all videos)',
-        accessStatusLabel: 'Access status:',
-        availableVideosLabel: 'Available videos:',
-        videoSingular: 'video',
-        videoPlural: 'videos',
-        nameLabel: 'Name:',
-        accessLevelLabel: 'Access level:',
-        roleOwner: 'Owner',
-        roleCodeHolder: 'All-access code holder',
-        roleAccountUser: 'Account user',
-        lockedNote: 'Create an account, sign in, or enter an all-access code to stream videos.',
-        switchCode: 'Switch access code',
-        requestCode: 'Request access code',
-        allVideosPhrase: 'all videos',
-        requestCodeMsg: (title) => `Hi! Could I get an access code to watch all videos (including "${title}")?`,
-        requestCodeHeading: (title) => `Request access code — ${title}`,
-        codePromptNote: (title) => `An access code unlocks every video, including <b>${esc(title)}</b>.`,
-        askCodeSendMsg: 'Ask for a code (Send message)',
-        allVideosTag: 'all-access code',
-      },
-      fr: {
-        searchPlaceholder: 'Rechercher des vidéos',
-        heroKicker: 'Reba · Code Accès Total · Lecture Seule · Sans Téléchargement',
-        heroTitleHtml: 'Trouvez les leaks <span>ici</span>',
-        heroSub: 'Un seul code d’accès débloque toutes les vidéos mises en ligne ici. Regardez directement dans votre navigateur sans téléchargement.',
-        enterCode: 'Entrer un code d’accès',
-        createOrSignIn: 'Créer un compte / Connexion',
-        contactOwner: 'Contacter le propriétaire',
-        messagesFromOwner: 'Messages du propriétaire',
-        uploadVideo: 'Publier une vidéo',
-        ownerPanel: 'Panneau propriétaire',
-        logout: 'Déconnexion',
-        tabCode: 'Code d’accès (Toutes les vidéos)',
-        tabRegister: 'Créer un compte',
-        tabLogin: 'Connexion utilisateur',
-        tabOwner: 'Connexion propriétaire',
-        redeemTitle: 'Utiliser un code d’accès',
-        redeemSub: 'Tout code d’accès valide débloque chaque vidéo publiée sur Reba.',
-        accessCodeLabel: 'Code d’accès',
-        unlockAll: 'Débloquer toutes les vidéos',
-        close: 'Fermer',
-        createAccTitle: 'Créer un compte',
-        usernameLabel: 'Nom d’utilisateur',
-        usernamePlaceholder: '3-30 caractères (lettres, chiffres, ._ -)',
-        passwordLabel: 'Mot de passe',
-        passwordPlaceholder: 'Au moins 6 caractères',
-        createAccBtn: 'Créer un compte',
-        signInTitle: 'Connexion',
-        signInBtn: 'Se connecter',
-        ownerLoginTitle: 'Connexion propriétaire',
-        ownerPassLabel: 'Mot de passe propriétaire',
-        ownerPassPlaceholder: 'Mot de passe propriétaire',
-        logInBtn: 'Connexion',
-        dmWithOwnerTitle: 'Messages directs avec le propriétaire',
-        dmOwnerPlaceholder: 'Écrire au propriétaire...',
-        send: 'Envoyer',
-        yourName: 'Votre nom',
-        howToReach: 'Comment vous contacter',
-        messageLabel: 'Message',
-        sendMessage: 'Envoyer le message',
-        contactSent: 'Message envoyé ! Le propriétaire examinera votre demande.',
-        uploadTitle: 'Publier une vidéo',
-        titleLabel: 'Titre',
-        descrLabel: 'Description',
-        videoFileLabel: 'Fichier vidéo',
-        uploadBtn: 'Publier',
-        cancel: 'Annuler',
-        uploadedOk: 'Publiée !',
-        backToVideos: '← Retour aux vidéos',
-        streamOnlyNotice: 'Lecture en streaming uniquement — le téléchargement est désactivé.',
-        likeBtnPrefix: 'J’aime (',
-        deleteVideo: 'Supprimer la vidéo',
-        commentsTitle: 'Commentaires',
-        commentPlaceholder: 'Écrire un commentaire...',
-        postBtn: 'Publier',
-        noComments: 'Aucun commentaire pour le moment.',
-        noVideos: 'Aucune vidéo pour le moment.',
-        byAuthor: 'par',
-        viewsWord: 'vues',
-        likesWord: 'j’aime',
-        askForCode: 'Demander un code',
-        likeCountBtn: (n) => `J’aime · ${n}`,
-        commentCountBtn: (n) => `Commentaires · ${n}`,
-        shareBtn: 'Partager',
-        linkCopied: 'Lien copié !',
-        singleUseNote: 'Chaque code est à usage unique et se verrouille sur la première personne qui l’utilise.',
-        statusUsed: 'Utilisé (1 personne)',
-        statusUnused: 'Disponible (usage unique)',
-        profileBtn: 'Profil',
-        profileTitle: 'Profil',
-        languageLabel: 'Langue',
-        statusLocked: 'Verrouillé (aperçu uniquement)',
-        statusUnlocked: 'Débloqué (toutes les vidéos)',
-        accessStatusLabel: 'Statut d’accès :',
-        availableVideosLabel: 'Vidéos disponibles :',
-        videoSingular: 'vidéo',
-        videoPlural: 'vidéos',
-        nameLabel: 'Nom :',
-        accessLevelLabel: 'Niveau d’accès :',
-        roleOwner: 'Propriétaire',
-        roleCodeHolder: 'Détenteur d’un code d’accès total',
-        roleAccountUser: 'Compte utilisateur',
-        lockedNote: 'Créez un compte, connectez-vous ou entrez un code d’accès total pour regarder les vidéos.',
-        switchCode: 'Changer de code d’accès',
-        requestCode: 'Demander un code d’accès',
-        allVideosPhrase: 'toutes les vidéos',
-        requestCodeMsg: (title) => `Bonjour ! Puis-je obtenir un code d’accès pour regarder toutes les vidéos (y compris "${title}") ?`,
-        requestCodeHeading: (title) => `Demander un code d’accès — ${title}`,
-        codePromptNote: (title) => `Un code d’accès débloque toutes les vidéos, y compris <b>${esc(title)}</b>.`,
-        askCodeSendMsg: 'Demander un code (Envoyer un message)',
-        allVideosTag: 'code accès total',
-      },
-      rw: {
-        searchPlaceholder: 'Shakisha amashusho',
-        heroKicker: 'Reba · Kode Ifungura Yose · Kureba Gusa · Nta Gukuramo',
-        heroTitleHtml: 'Shakira ama-leaks <span>hano</span>',
-        heroSub: 'Kode imwe ifungura amashusho yose yashyizwe hano. Reba ako kanya mu buryo bwa streaming nta gukuramo.',
-        enterCode: 'Injiza kode',
-        createOrSignIn: 'Fungura konti / Injira',
-        contactOwner: 'Vugana na nyir’urubuga',
-        messagesFromOwner: 'Ubutumwa bwa nyir’urubuga',
-        uploadVideo: 'Shyiraho amashusho',
-        ownerPanel: 'Igenzura rya nyir’urubuga',
-        logout: 'Sohoka',
-        tabCode: 'Kode y’urufunguzo (Amashusho yose)',
-        tabRegister: 'Fungura konti',
-        tabLogin: 'Injira muri konti',
-        tabOwner: 'Injira nk’nyir’urubuga',
-        redeemTitle: 'Koresha kode y’urufunguzo',
-        redeemSub: 'Kode yose yemewe ifungura buri mashusho yose ari kuri Reba.',
-        accessCodeLabel: 'Kode y’urufunguzo',
-        unlockAll: 'Fungura amashusho yose',
-        close: 'Funga',
-        createAccTitle: 'Fungura konti nshya',
-        usernameLabel: 'Izina ry’umukoresha',
-        usernamePlaceholder: 'Inyuguti 3-30 (inyuguti, imibare, ._ -)',
-        passwordLabel: 'Ijambo banga',
-        passwordPlaceholder: 'Nibura inyuguti 6',
-        createAccBtn: 'Fungura konti',
-        signInTitle: 'Injira',
-        signInBtn: 'Injira',
-        ownerLoginTitle: 'Injira nk’nyir’urubuga',
-        ownerPassLabel: 'Ijambo banga rya nyir’urubuga',
-        ownerPassPlaceholder: 'Ijambo banga rya nyir’urubuga',
-        logInBtn: 'Injira',
-        dmWithOwnerTitle: 'Ubutumwa bwihariye na nyir’urubuga',
-        dmOwnerPlaceholder: 'Andikira nyir’urubuga...',
-        send: 'Ohereza',
-        yourName: 'Izina ryawe',
-        howToReach: 'Uko twaguhamagara / kukwandikira',
-        messageLabel: 'Ubutumwa',
-        sendMessage: 'Ohereza ubutumwa',
-        contactSent: 'Ubutumwa bwoherejwe! Nyir’urubuga azareba ubusabe bwawe.',
-        uploadTitle: 'Shyiraho amashusho',
-        titleLabel: 'Umutwe',
-        descrLabel: 'Ibisobanuro',
-        videoFileLabel: 'Idosiye y’amashusho',
-        uploadBtn: 'Shyiraho',
-        cancel: 'Hagarika',
-        uploadedOk: 'Byashyizweho!',
-        backToVideos: '← Subira ku mashusho',
-        streamOnlyNotice: 'Kureba kuri interineti gusa — gukuramo ntibikora.',
-        likeBtnPrefix: 'Kanda Like (',
-        deleteVideo: 'Siba amashusho',
-        commentsTitle: 'Ibitekerezo',
-        commentPlaceholder: 'Andika igitekerezo...',
-        postBtn: 'Ohereza',
-        noComments: 'Nta bitekerezo birabaho.',
-        noVideos: 'Nta mashusho arahari.',
-        byAuthor: 'byashyizweho na',
-        viewsWord: 'ababisuye',
-        likesWord: 'ama-like',
-        askForCode: 'Saba kode',
-        likeCountBtn: (n) => `Like · ${n}`,
-        commentCountBtn: (n) => `Ibitekerezo · ${n}`,
-        shareBtn: 'Sangiza',
-        linkCopied: 'Ihuza ryakoporowe!',
-        singleUseNote: 'Buri kode ikoreshwa rimwe gusa kandi ifatwa n’umuntu wa mbere uyinjije.',
-        statusUsed: 'Yakoreshejwe (umuntu 1)',
-        statusUnused: 'Nturakoreshwa (1 gusa)',
-        profileBtn: 'Umwirondoro',
-        profileTitle: 'Umwirondoro',
-        languageLabel: 'Ururimi',
-        statusLocked: 'Birakinze (kwitegereza imitwe gusa)',
-        statusUnlocked: 'Birafunguye (amashusho yose)',
-        accessStatusLabel: 'Imiterere y’uburenganzira:',
-        availableVideosLabel: 'Amashusho ahari:',
-        videoSingular: 'amashusho',
-        videoPlural: 'amashusho',
-        nameLabel: 'Izina:',
-        accessLevelLabel: 'Urwego rw’uburenganzira:',
-        roleOwner: 'Nyir’urubuga',
-        roleCodeHolder: 'Uwafunguye na kode yose',
-        roleAccountUser: 'Ufite konti',
-        lockedNote: 'Fungura konti, injira, cyangwa shyiramo kode ifungura byose kugira ngo urebe amashusho.',
-        switchCode: 'Hindura kode',
-        requestCode: 'Saba kode',
-        allVideosPhrase: 'amashusho yose',
-        requestCodeMsg: (title) => `Muraho! Nashobora kubona kode ifungura amashusho yose (harimo na "${title}")?`,
-        requestCodeHeading: (title) => `Gusaba kode — ${title}`,
-        codePromptNote: (title) => `Kode ifungura buri mashusho yose, harimo na <b>${esc(title)}</b>.`,
-        askCodeSendMsg: 'Saba kode (Ohereza ubutumwa)',
-        allVideosTag: 'kode ifungura yose',
-      },
-    };
-
-    const t = () => I18N[currentLang] || I18N.en;
-
-    function applyTranslations() {
-      const tr = t();
-      document.documentElement.lang = currentLang;
-      const topSel = document.getElementById('langSelect');
-      const profSel = document.getElementById('profileLangSelect');
-      if (topSel) topSel.value = currentLang;
-      if (profSel) profSel.value = currentLang;
-
-      document.getElementById('searchInput').placeholder = tr.searchPlaceholder;
-      document.querySelector('.hero-kicker').textContent = tr.heroKicker;
-      document.querySelector('.hero-title').innerHTML = tr.heroTitleHtml;
-      document.querySelector('.hero-sub').textContent = tr.heroSub;
-
-      document.querySelectorAll('#topActions .btnUnlock')[0].textContent = tr.enterCode;
-      document.querySelectorAll('#topActions .btnUnlock')[1].textContent = tr.createOrSignIn;
-      document.querySelector('.btnContact').textContent = tr.contactOwner;
-      document.querySelector('.btnInboxToggle').textContent = tr.messagesFromOwner;
-      document.querySelector('.btnUploadToggle').textContent = tr.uploadVideo;
-      document.querySelector('.btnOwnerPanelToggle').textContent = tr.ownerPanel;
-      document.querySelector('.btnLogout').textContent = tr.logout;
-
-      document.getElementById('tabCode').textContent = tr.tabCode;
-      document.getElementById('tabRegister').textContent = tr.tabRegister;
-      document.getElementById('tabLogin').textContent = tr.tabLogin;
-      document.getElementById('tabOwner').textContent = tr.tabOwner;
-
-      document.querySelector('#formCode h2').textContent = tr.redeemTitle;
-      document.querySelector('#formCode .meta').textContent = tr.redeemSub;
-      document.querySelector('#formCode label').textContent = tr.accessCodeLabel;
-      document.querySelector('#formCode button[type="submit"]').textContent = tr.unlockAll;
-      document.querySelector('#formCode button[type="button"]').textContent = tr.close;
-
-      document.querySelector('#formRegister h2').textContent = tr.createAccTitle;
-      const regLabels = document.querySelectorAll('#formRegister label');
-      regLabels[0].textContent = tr.usernameLabel;
-      regLabels[1].textContent = tr.passwordLabel;
-      document.getElementById('regUsername').placeholder = tr.usernamePlaceholder;
-      document.getElementById('regPassword').placeholder = tr.passwordPlaceholder;
-      document.querySelector('#formRegister button[type="submit"]').textContent = tr.createAccBtn;
-      document.querySelector('#formRegister button[type="button"]').textContent = tr.close;
-
-      document.querySelector('#formLogin h2').textContent = tr.signInTitle;
-      const loginLabels = document.querySelectorAll('#formLogin label');
-      loginLabels[0].textContent = tr.usernameLabel;
-      loginLabels[1].textContent = tr.passwordLabel;
-      document.querySelector('#formLogin button[type="submit"]').textContent = tr.signInBtn;
-      document.querySelector('#formLogin button[type="button"]').textContent = tr.close;
-
-      document.querySelector('#formOwner h2').textContent = tr.ownerLoginTitle;
-      document.querySelector('#formOwner label').textContent = tr.ownerPassLabel;
-      document.getElementById('ownerPassword').placeholder = tr.ownerPassPlaceholder;
-      document.querySelector('#formOwner button[type="submit"]').textContent = tr.logInBtn;
-      document.querySelector('#formOwner button[type="button"]').textContent = tr.close;
-
-      document.querySelector('#userInboxCard h2').textContent = tr.dmWithOwnerTitle;
-      document.getElementById('userDmInput').placeholder = tr.dmOwnerPlaceholder;
-      document.querySelector('#userInboxCard button[type="submit"]').textContent = tr.send;
-
-      const cLabels = document.querySelectorAll('#contactCard label');
-      if (cLabels.length >= 3) {
-        cLabels[0].textContent = tr.yourName;
-        cLabels[1].textContent = tr.howToReach;
-        cLabels[2].textContent = tr.messageLabel;
-      }
-      document.querySelector('#contactCard button[type="submit"]').textContent = tr.sendMessage;
-      document.querySelector('#contactCard button[type="button"]').textContent = tr.close;
-
-      document.querySelector('#uploadCard h2').textContent = tr.uploadTitle;
-      const uLabels = document.querySelectorAll('#uploadCard label');
-      if (uLabels.length >= 3) {
-        uLabels[0].textContent = tr.titleLabel;
-        uLabels[1].textContent = tr.descrLabel;
-        uLabels[2].textContent = tr.videoFileLabel;
-      }
-      document.querySelector('#uploadCard button[type="submit"]').textContent = tr.uploadBtn;
-      document.querySelector('#uploadCard button[type="button"]').textContent = tr.cancel;
-
-      document.querySelector('#playerCard > button').textContent = tr.backToVideos;
-      document.querySelector('#playerCard .meta').textContent = tr.streamOnlyNotice;
-      const likeCountSpan = document.getElementById('likeCount');
-      const commentCountSpan = document.getElementById('commentCount');
-      const currentLikes = likeCountSpan ? likeCountSpan.textContent : '0';
-      const currentComments = commentCountSpan ? commentCountSpan.textContent : '0';
-      document.getElementById('btnLike').innerHTML = `${esc(tr.likeCountBtn(currentLikes).split(currentLikes)[0])}<span id="likeCount">${esc(currentLikes)}</span>`;
-      document.getElementById('btnCommentCount').innerHTML = `${esc(tr.commentCountBtn(currentComments).split(currentComments)[0])}<span id="commentCount">${esc(currentComments)}</span>`;
-      document.getElementById('btnShareVideo').textContent = tr.shareBtn;
-      document.getElementById('btnDeleteVideo').textContent = tr.deleteVideo;
-      document.querySelector('#playerCard h3').textContent = tr.commentsTitle;
-      document.getElementById('commentInput').placeholder = tr.commentPlaceholder;
-      document.querySelector('#playerCard form button[type="submit"]').textContent = tr.postBtn;
-
-      document.getElementById('profileTitle').textContent = tr.profileTitle;
-      document.querySelector('#profileCard > div:first-child button').textContent = tr.close;
-      document.getElementById('profileLangLabel').textContent = tr.languageLabel;
-
-      renderProfileCard();
-      loadVideos();
+    function getToken() {
+      return localStorage.getItem(TOKEN_KEY) || '';
     }
 
-    function setLanguage(lang) {
-      if (!['en', 'fr', 'rw'].includes(lang)) return;
-      currentLang = lang;
-      try { localStorage.setItem('reba_lang', lang); } catch {}
-      applyTranslations();
+    function setToken(token) {
+      if (token) localStorage.setItem(TOKEN_KEY, token);
+      else localStorage.removeItem(TOKEN_KEY);
+      updateAuthUI();
     }
 
-    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-    const setClassHidden = (selector, isHidden) => {
-      document.querySelectorAll(selector).forEach(el => el.classList.toggle('hidden', isHidden));
-    };
-
-    async function api(url, opts = {}) {
-      const res = await fetch(url, opts);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Request failed.');
-      return data;
+    function updateAuthUI() {
+      const hasOwner = Boolean(getToken());
+      const bar = document.getElementById('owner-status-bar');
+      bar.textContent = hasOwner
+        ? 'Status: Logged in as OWNER — video upload unlocked'
+        : 'Status: Guest view — log in as OWNER above before uploading';
     }
 
-    async function refreshMe() {
-      me = await api('/api/me');
-      const isLoggedIn = !!me;
-      const isAdmin = me && me.role === 'admin';
-      const isAccountUser = me && me.role === 'user';
+    async function doOwnerLogin() {
+      const msgEl = document.getElementById('owner-login-msg');
+      const pw = document.getElementById('owner-password-input').value;
+      msgEl.textContent = 'Logging in...';
+      msgEl.className = 'status-msg';
 
-      setClassHidden('.btnUnlock', isLoggedIn);
-      setClassHidden('.btnContact', isAdmin);
-      setClassHidden('.btnInboxToggle', !isAccountUser);
-      setClassHidden('.btnLogout', !isLoggedIn);
-      setClassHidden('.btnUploadToggle', !isLoggedIn);
-      setClassHidden('.btnOwnerPanelToggle', !isAdmin);
-      document.getElementById('btnDeleteVideo').classList.toggle('hidden', !isAdmin);
-
-      if (isAdmin) {
-        document.getElementById('contactCard').classList.add('hidden');
-        document.getElementById('userInboxCard').classList.add('hidden');
-      }
-
-      document.querySelectorAll('.userBadge').forEach(badge => {
-        if (isLoggedIn) {
-          const roleLabel = me.role === 'viewer' ? t().allVideosTag : me.role;
-          badge.textContent = `${me.name} (${roleLabel})`;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
+      try {
+        const res = await fetch('/api/owner/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.token) {
+          msgEl.textContent = data.error || 'Login failed.';
+          return;
         }
-      });
-
-      renderProfileCard();
-      if (!isLoggedIn) {
-        document.getElementById('ownerPanel').classList.add('hidden');
-        document.getElementById('uploadCard').classList.add('hidden');
-        document.getElementById('userInboxCard').classList.add('hidden');
-      }
-      if (currentVideoId) openVideo(currentVideoId, true);
-    }
-
-    function openAuthModal(tab = 'code', customNotice = '') {
-      document.getElementById('authCard').classList.remove('hidden');
-      document.getElementById('contactCard').classList.add('hidden');
-      switchAuthTab(tab);
-      if (customNotice) {
-        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(customNotice)}</div>`;
+        setToken(data.token);
+        msgEl.textContent = 'Owner logged in.';
+        msgEl.className = 'status-msg ok-msg';
+      } catch (err) {
+        msgEl.textContent = 'Connection error while logging in.';
       }
     }
-    function closeAuthModal() {
-      document.getElementById('authCard').classList.add('hidden');
-      document.getElementById('authMsg').innerHTML = '';
-    }
-    function switchAuthTab(tab) {
-      for (const t of ['code', 'register', 'login', 'owner']) {
-        document.getElementById('form' + t[0].toUpperCase() + t.slice(1)).classList.toggle('hidden', t !== tab);
-        document.getElementById('tab' + t[0].toUpperCase() + t.slice(1)).className = (t === tab) ? 'active-tab' : 'ghost';
-      }
-      document.getElementById('authMsg').innerHTML = '';
-    }
 
-    async function submitRegister(e) {
-      e.preventDefault();
+    document.getElementById('owner-login-submit').addEventListener('click', doOwnerLogin);
+    document.getElementById('owner-logout-btn').addEventListener('click', () => {
+      setToken('');
+      document.getElementById('owner-login-msg').textContent = 'Logged out.';
+    });
+
+    document.getElementById('open-owner-btn').addEventListener('click', () => {
+      document.getElementById('owner-login-panel').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('open-code-btn').addEventListener('click', () => {
+      document.getElementById('code-panel').classList.toggle('hidden');
+    });
+
+    document.getElementById('toggle-chat-btn').addEventListener('click', () => {
+      document.getElementById('chat-panel').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('access-code-submit').addEventListener('click', async () => {
+      const code = document.getElementById('access-code-input').value.trim();
+      const msgEl = document.getElementById('access-code-msg');
+      msgEl.className = 'status-msg';
       try {
-        await api('/api/register', {
+        const res = await fetch('/api/access-code', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('regUsername').value,
-            password: document.getElementById('regPassword').value,
-          }),
+          body: JSON.stringify({ code }),
         });
-        closeAuthModal();
-        await refreshMe();
-      } catch (err) {
-        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+        const data = await res.json();
+        msgEl.textContent = data.ok ? 'Access code verified!' : (data.error || 'Invalid code');
+        if (data.ok) msgEl.className = 'status-msg ok-msg';
+      } catch (e) {
+        msgEl.textContent = 'Error checking access code.';
       }
-    }
+    });
 
-    async function submitLogin(e) {
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      try {
-        await api('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('loginUsername').value,
-            password: document.getElementById('loginPassword').value,
-          }),
-        });
-        closeAuthModal();
-        await refreshMe();
-      } catch (err) {
-        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      const msgEl = document.getElementById('upload-msg');
+      const token = getToken();
+      const fileInput = document.getElementById('upload-file');
+      const titleInput = document.getElementById('upload-title');
+      const descInput = document.getElementById('upload-desc');
+
+      msgEl.className = 'status-msg';
+
+      if (!token) {
+        msgEl.textContent = 'Log in with OWNER PASSWORD first.';
+        return;
       }
-    }
-
-    async function submitCode(e) {
-      e.preventDefault();
-      try {
-        await api('/api/redeem', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: document.getElementById('codeInput').value }),
-        });
-        closeAuthModal();
-        await refreshMe();
-        if (currentVideoId) await openVideo(currentVideoId);
-      } catch (err) {
-        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
-      }
-    }
-
-    async function submitOwnerLogin(e) {
-      e.preventDefault();
-      try {
-        await api('/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: document.getElementById('ownerPassword').value }),
-        });
-        closeAuthModal();
-        await refreshMe();
-      } catch (err) {
-        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
-      }
-    }
-
-    async function logout() {
-      await api('/api/logout', { method: 'POST' });
-      document.getElementById('profileCard').classList.add('hidden');
-      await refreshMe();
-    }
-
-    function renderProfileCard() {
-      const tr = t();
-      const btn = document.getElementById('cornerProfileBtn');
-      const summary = document.getElementById('profileSummary');
-      const actions = document.getElementById('profileActions');
-      const videoCount = Array.isArray(videosCache) ? videosCache.length : 0;
-      const videoWord = videoCount === 1 ? tr.videoSingular : tr.videoPlural;
-
-      if (!me) {
-        btn.textContent = tr.profileBtn;
-        summary.innerHTML = `
-          <div><b>${esc(tr.accessStatusLabel)}</b> ${esc(tr.statusLocked)}</div>
-          <div style="margin-top:4px;"><b>${esc(tr.availableVideosLabel)}</b> ${videoCount} ${esc(videoWord)}</div>
-          <div style="margin-top:4px;">${esc(tr.lockedNote)}</div>
-          <div class="code-prompt-box" style="margin-top:10px; font-size:12px;">
-            <div><b>Visitor (no code):</b> Browse titles, like/comment counts, share links, or request a code.</div>
-            <div style="margin-top:4px;"><b>Visitor (with single-use code):</b> Stream videos, like, comment, and upload (code locks to 1 person).</div>
-          </div>
-        `;
-        actions.innerHTML = `
-          <button type="button" class="primary" onclick="toggleProfileCard(false); openAuthModal('code')">${esc(tr.enterCode)}</button>
-          <button type="button" onclick="toggleProfileCard(false); openAuthModal('register')">${esc(tr.createOrSignIn)}</button>
-          <button type="button" class="ghost" onclick="toggleProfileCard(false); openRequestCodeForVideo(0, tr.allVideosPhrase)">${esc(tr.requestCode)}</button>
-        `;
+      if (!fileInput.files.length) {
+        msgEl.textContent = 'Choose a video file first.';
         return;
       }
 
-      const roleLabel = me.role === 'admin' ? tr.roleOwner : (me.role === 'viewer' ? tr.roleCodeHolder : tr.roleAccountUser);
-      btn.textContent = `${tr.profileBtn} · ${me.name}`;
-      const roleNote = me.role === 'admin'
-        ? '<b>Owner only:</b> View who claimed each code (and when), manage codes, read contact messages, DM users, and delete videos/comments.'
-        : (me.role === 'viewer'
-          ? '<b>Visitor (with view code):</b> Stream videos, like, comment, and upload. Code usage details stay private to the owner.'
-          : '<b>Account user:</b> Stream videos, like, comment, upload, and DM the owner.');
-      summary.innerHTML = `
-        <div><b>${esc(tr.accessStatusLabel)}</b> ${esc(tr.statusUnlocked)}</div>
-        <div style="margin-top:4px;"><b>${esc(tr.nameLabel)}</b> ${esc(me.name)}</div>
-        <div style="margin-top:4px;"><b>${esc(tr.accessLevelLabel)}</b> ${esc(roleLabel)}</div>
-        <div style="margin-top:4px;"><b>${esc(tr.availableVideosLabel)}</b> ${videoCount} ${esc(videoWord)}</div>
-        <div class="code-prompt-box" style="margin-top:10px; font-size:12px;">${roleNote}</div>
-      `;
-
-      const buttons = [];
-      if (me.role !== 'admin') {
-        buttons.push(`<button type="button" onclick="toggleProfileCard(false); openAuthModal('code')">${esc(tr.switchCode)}</button>`);
-      }
-      if (me.role === 'user') {
-        buttons.push(`<button type="button" onclick="toggleProfileCard(false); toggleUserInbox()">${esc(tr.messagesFromOwner)}</button>`);
-      }
-      if (me.role === 'admin') {
-        buttons.push(`<button type="button" onclick="toggleProfileCard(false); toggleOwnerPanel()">${esc(tr.ownerPanel)}</button>`);
-      }
-      buttons.push(`<button type="button" onclick="toggleProfileCard(false); toggleUpload(true)">${esc(tr.uploadVideo)}</button>`);
-      if (me.role !== 'admin') {
-        buttons.push(`<button type="button" class="ghost" onclick="toggleProfileCard(false); openRequestCodeForVideo(0, tr.allVideosPhrase)">${esc(tr.requestCode)}</button>`);
-      }
-      buttons.push(`<button type="button" class="ghost" onclick="logout()">${esc(tr.logout)}</button>`);
-      actions.innerHTML = buttons.join('');
-    }
-
-    function toggleProfileCard(force) {
-      const card = document.getElementById('profileCard');
-      const show = force !== undefined ? force : card.classList.contains('hidden');
-      renderProfileCard();
-      card.classList.toggle('hidden', !show);
-      if (show) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-
-    function handleCornerProfileClick() {
-      if (!me) {
-        openAuthModal('register');
-        return;
-      }
-      toggleProfileCard();
-    }
-
-    async function toggleUserInbox() {
-      const card = document.getElementById('userInboxCard');
-      const show = card.classList.contains('hidden');
-      card.classList.toggle('hidden', !show);
-      if (show) await loadUserDmThread();
-    }
-
-    async function loadUserDmThread() {
-      const rows = await api('/api/dm');
-      const box = document.getElementById('userDmThread');
-      if (!rows.length) {
-        box.innerHTML = '<div class="meta">No messages yet.</div>';
-        return;
-      }
-      box.innerHTML = rows.map(m =>
-        `<div class="dm-item"><span class="dm-sender">${esc(m.sender)}:</span> ${esc(m.body)}</div>`
-      ).join('');
-      box.scrollTop = box.scrollHeight;
-    }
-
-    async function sendUserDm(e) {
-      e.preventDefault();
-      const input = document.getElementById('userDmInput');
-      try {
-        await api('/api/dm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body: input.value }),
-        });
-        input.value = '';
-        document.getElementById('userDmMsg').innerHTML = '';
-        await loadUserDmThread();
-      } catch (err) {
-        document.getElementById('userDmMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
-      }
-    }
-
-    function openContactModal(prefillMessage = '', heading = 'Contact owner') {
-      if (me && me.role === 'admin') return;
-      document.getElementById('contactTitle').textContent = heading;
-      if (prefillMessage) {
-        document.getElementById('cBody').value = prefillMessage;
-      }
-      document.getElementById('contactCard').classList.remove('hidden');
-      document.getElementById('authCard').classList.add('hidden');
-      document.getElementById('contactCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function openRequestCodeForVideo(videoId, videoTitle) {
-      const v = videosCache.find(item => item.id === videoId);
-      const title = videoTitle || (v ? v.title : `Video #${videoId}`);
-      openContactModal(
-        t().requestCodeMsg(title),
-        t().requestCodeHeading(title)
-      );
-    }
-
-    function closeContactModal() {
-      document.getElementById('contactCard').classList.add('hidden');
-      document.getElementById('contactMsg').innerHTML = '';
-    }
-    async function submitContact(e) {
-      e.preventDefault();
-      try {
-        await api('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: document.getElementById('cName').value,
-            contact: document.getElementById('cContact').value,
-            message: document.getElementById('cBody').value,
-          }),
-        });
-        document.getElementById('contactMsg').innerHTML = `<div class="msg-ok">${esc(t().contactSent)}</div>`;
-        e.target.reset();
-      } catch (err) {
-        document.getElementById('contactMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
-      }
-    }
-
-    function toggleUpload(force) {
-      const el = document.getElementById('uploadCard');
-      el.classList.toggle('hidden', force !== undefined ? !force : !el.classList.contains('hidden'));
-    }
-
-    async function submitUpload(e) {
-      e.preventDefault();
       const fd = new FormData();
-      fd.append('title', document.getElementById('vTitle').value);
-      fd.append('descr', document.getElementById('vDescr').value);
-      fd.append('video', document.getElementById('vFile').files[0]);
-      try {
-        await api('/api/videos', { method: 'POST', body: fd });
-        document.getElementById('uploadMsg').innerHTML = `<div class="msg-ok">${esc(t().uploadedOk)}</div>`;
-        e.target.reset();
-        await loadVideos();
-      } catch (err) {
-        document.getElementById('uploadMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
-      }
-    }
+      fd.append('title', titleInput.value.trim());
+      fd.append('description', descInput.value.trim());
+      fd.append('video', fileInput.files[0]);
 
-    function setVideoSort(sortMode) {
-      currentSort = ['views', 'likes'].includes(sortMode) ? sortMode : 'new';
-      const newBtn = document.getElementById('sortNewBtn');
-      const viewsBtn = document.getElementById('sortViewsBtn');
-      const likesBtn = document.getElementById('sortLikesBtn');
-      if (newBtn) newBtn.className = currentSort === 'new' ? 'active-tab' : 'ghost';
-      if (viewsBtn) viewsBtn.className = currentSort === 'views' ? 'active-tab' : 'ghost';
-      if (likesBtn) likesBtn.className = currentSort === 'likes' ? 'active-tab' : 'ghost';
-      loadVideos();
-    }
+      msgEl.textContent = 'Uploading video...';
+      try {
+        const res = await fetch('/api/videos', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          msgEl.textContent = data.error || 'Upload failed.';
+          return;
+        }
+        msgEl.textContent = `Uploaded: ${data.video.title}`;
+        msgEl.className = 'status-msg ok-msg';
+        e.target.reset();
+        loadVideos();
+      } catch (err) {
+        msgEl.textContent = 'Upload failed due to network error.';
+      }
+    });
 
     async function loadVideos() {
-      const q = encodeURIComponent(document.getElementById('searchInput').value || '');
-      const sort = encodeURIComponent(currentSort);
-      const list = await api(`/api/videos?q=${q}&sort=${sort}`);
-      videosCache = list;
-      renderProfileCard();
-      const grid = document.getElementById('videoGrid');
-      const tr = t();
-      if (!list.length) {
-        grid.innerHTML = `<div class="meta">${esc(tr.noVideos)}</div>`;
-        return;
-      }
-      grid.innerHTML = list.map(v => `
-        <div class="video-tile" onclick="openVideo(${v.id})">
-          <div class="video-title">${esc(v.title)}</div>
-          <div class="meta">${esc(tr.byAuthor)} ${esc(v.author || 'Member')} &middot; ${v.views} ${esc(tr.viewsWord)}</div>
-          <div style="margin-top:12px; display:flex; gap:6px; flex-wrap:wrap;" onclick="event.stopPropagation()">
-            <button type="button" style="padding:5px 10px; font-size:11px;" onclick="quickLikeFromFeed(${v.id})">${esc(tr.likeCountBtn(v.likes || 0))}</button>
-            <button type="button" class="ghost" style="padding:5px 10px; font-size:11px;" onclick="openVideo(${v.id}, false, true)">${esc(tr.commentCountBtn(v.comments || 0))}</button>
-            <button type="button" class="ghost" style="padding:5px 10px; font-size:11px;" onclick="shareVideo(${v.id})">${esc(tr.shareBtn)}</button>
-            <button type="button" class="primary" style="padding:5px 10px; font-size:11px;" onclick="openRequestCodeForVideo(${v.id})">${esc(tr.askForCode)}</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function openVideo(id, noview = false, focusComments = false) {
-      currentVideoId = id;
-      document.getElementById('shareNotice').textContent = '';
+      const listEl = document.getElementById('videos-list');
+      const q = encodeURIComponent(document.getElementById('search-input').value.trim());
       try {
-        const v = await api(`/api/videos/${id}${noview ? '?noview=1' : ''}`);
-        const cCount = (v.comments || []).length;
-        document.getElementById('playerCard').classList.remove('hidden');
-        document.getElementById('pTitle').textContent = v.title;
-        document.getElementById('pMeta').textContent = `${t().byAuthor} ${v.author || 'Member'} · ${v.views} ${t().viewsWord}`;
-        document.getElementById('pDescr').textContent = v.descr || '';
-        document.getElementById('likeCount').textContent = v.likes;
-        document.getElementById('commentCount').textContent = cCount;
-        document.getElementById('btnDeleteVideo').classList.toggle('hidden', !(me && me.role === 'admin'));
-        const player = document.getElementById('videoPlayer');
-        if (!noview || !player.src) player.src = `/stream/${id}`;
-        renderComments(v.comments || []);
-        if (focusComments) jumpToComments();
-      } catch (err) {
-        const v = videosCache.find(item => item.id === id);
-        const title = v ? v.title : `Video #${id}`;
-        openAuthModal('code', err.message);
-        document.getElementById('authMsg').innerHTML = `
-          <div class="msg-err">${esc(err.message)}</div>
-          <div class="code-prompt-box">
-            <div style="font-size:13px; margin-bottom:10px;">An access code unlocks every video, including <b>${esc(title)}</b>.</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="primary" onclick="openRequestCodeForVideo(${id}, '${esc(title).replace(/'/g, "\'")}')">Ask for a code (Send message)</button>
-              <button type="button" class="ghost" onclick="switchAuthTab('register')">Create account</button>
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    function closePlayer() {
-      currentVideoId = null;
-      document.getElementById('videoPlayer').pause();
-      document.getElementById('videoPlayer').removeAttribute('src');
-      document.getElementById('playerCard').classList.add('hidden');
-      loadVideos();
-    }
-
-    function showHome() {
-      closePlayer();
-      document.getElementById('authCard').classList.add('hidden');
-      document.getElementById('contactCard').classList.add('hidden');
-    }
-
-    async function toggleLike() {
-      if (!currentVideoId) return;
-      try {
-        const r = await api(`/api/videos/${currentVideoId}/like`, { method: 'POST' });
-        document.getElementById('likeCount').textContent = r.likes;
-        await loadVideos();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    async function quickLikeFromFeed(videoId) {
-      try {
-        await api(`/api/videos/${videoId}/like`, { method: 'POST' });
-        await loadVideos();
-      } catch (err) {
-        openAuthModal('code', err.message);
-      }
-    }
-
-    function jumpToComments() {
-      const inp = document.getElementById('commentInput');
-      if (inp) {
-        inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        inp.focus();
-      }
-    }
-
-    async function shareVideo(videoId) {
-      const url = `${window.location.origin}${window.location.pathname}?v=${encodeURIComponent(videoId)}`;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(url);
-        } else {
-          const ta = document.createElement('textarea');
-          ta.value = url;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
+        const res = await fetch(`/api/videos?sort=${encodeURIComponent(currentSort)}&q=${q}`);
+        const videos = await res.json();
+        if (!Array.isArray(videos) || videos.length === 0) {
+          listEl.innerHTML = '<div class="muted">No videos yet.</div>';
+          return;
         }
-      } catch {}
-      const notice = document.getElementById('shareNotice');
-      if (notice && currentVideoId === videoId) {
-        notice.textContent = `${t().linkCopied} ${url}`;
-      } else {
-        alert(`${t().linkCopied}
-${url}`);
-      }
-    }
-
-    async function postComment(e) {
-      e.preventDefault();
-      if (!currentVideoId) return;
-      const body = document.getElementById('commentInput').value;
-      try {
-        await api(`/api/videos/${currentVideoId}/comments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body }),
-        });
-        document.getElementById('commentInput').value = '';
-        await openVideo(currentVideoId, true);
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    function renderComments(comments) {
-      const isAdmin = me && me.role === 'admin';
-      const box = document.getElementById('commentsList');
-      if (!comments.length) {
-        box.innerHTML = `<div class="meta">${esc(t().noComments)}</div>`;
-        return;
-      }
-      box.innerHTML = comments.map(c => `
-        <div class="comment">
-          <div>
-            <div class="comment-author">${esc(c.author || 'Member')}</div>
-            <div style="margin-top:4px; font-size:14px;">${esc(c.body)}</div>
+        listEl.innerHTML = videos.map((v) => `
+          <div class="video-card">
+            <strong>${escapeHtml(v.title)}</strong>
+            ${v.description ? `<div class="muted">${escapeHtml(v.description)}</div>` : ''}
+            <video controls preload="metadata" src="${escapeHtml(v.url)}"></video>
           </div>
-          ${isAdmin ? `<button class="danger" onclick="deleteComment(${c.id})">Delete</button>` : ''}
-        </div>
-      `).join('');
+        `).join('');
+      } catch (e) {
+        listEl.innerHTML = '<div class="muted">Could not load videos.</div>';
+      }
     }
 
-    async function deleteComment(commentId) {
+    async function loadChat() {
+      const box = document.getElementById('chat-messages');
       try {
-        await api(`/api/comments/${commentId}`, { method: 'DELETE' });
-        if (currentVideoId) await openVideo(currentVideoId, true);
-        if (!document.getElementById('ownerPanel').classList.contains('hidden')) await loadOwnerData();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    async function deleteVideo() {
-      if (!currentVideoId) return;
-      try {
-        await api(`/api/videos/${currentVideoId}`, { method: 'DELETE' });
-        closePlayer();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    async function toggleOwnerPanel() {
-      const panel = document.getElementById('ownerPanel');
-      const show = panel.classList.contains('hidden');
-      panel.classList.toggle('hidden', !show);
-      if (show) await loadOwnerData();
-    }
-
-    async function loadOwnerData() {
-      const [codes, msgs, users, recentComments] = await Promise.all([
-        api('/api/admin/codes'),
-        api('/api/admin/messages'),
-        api('/api/admin/users'),
-        api('/api/admin/comments'),
-      ]);
-
-      const sel = document.getElementById('ownerDmUser');
-      const prev = sel.value;
-      if (!users.length) {
-        sel.innerHTML = '<option value="">No registered accounts yet</option>';
-        document.getElementById('ownerDmThread').innerHTML = '<div class="meta">Once visitors create an account, you can message them here.</div>';
-      } else {
-        sel.innerHTML = users.map(u => `<option value="${u.id}">${esc(u.username)}</option>`).join('');
-        if (prev && users.some(u => String(u.id) === String(prev))) sel.value = prev;
-        await loadOwnerDmThread();
-      }
-
-      document.getElementById('codesList').innerHTML = codes.map(c => {
-        const when = c.used_at ? new Date(c.used_at).toLocaleString() : '';
-        const usage = c.used_by
-          ? `Used by <b>${esc(c.used_by)}</b>${when ? ` · ${esc(when)}` : ''}`
-          : t().statusUnused;
-        return `<div style="margin:8px 0; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <div><b>${esc(c.code)}</b> — ${esc(c.label)} · <span>${usage}</span></div>
-          <button type="button" class="danger" onclick="deleteCode(${c.id})">Revoke</button>
-        </div>`;
-      }).join('') || 'No codes yet.';
-      document.getElementById('ownerCommentsList').innerHTML = recentComments.map(c => {
-        const when = c.at ? new Date(c.at).toLocaleString() : '';
-        const vidLabel = c.video_title ? `on <b>${esc(c.video_title)}</b>` : `on Video #${esc(c.video_id)}`;
-        return `<div style="margin:8px 0; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <div>
-            <b>${esc(c.author || 'Member')}</b> ${vidLabel}${when ? ` · <span>${esc(when)}</span>` : ''}
-            <div style="margin-top:3px; color:var(--text-main);">${esc(c.body)}</div>
+        const res = await fetch('/api/chat');
+        const msgs = await res.json();
+        if (!Array.isArray(msgs) || msgs.length === 0) {
+          box.innerHTML = '<div class="muted">No chat messages yet. Start the conversation below.</div>';
+          return;
+        }
+        box.innerHTML = msgs.map((m) => `
+          <div class="msg">
+            <div class="msg-meta">
+              <span class="${m.role === 'owner' ? 'badge-owner' : ''}">${escapeHtml(m.sender)}</span>
+              · ${new Date(m.created_at).toLocaleTimeString()}
+            </div>
+            <div>${escapeHtml(m.message)}</div>
           </div>
-          <button type="button" class="danger" onclick="deleteComment(${c.id})">Delete</button>
-        </div>`;
-      }).join('') || 'No comments yet.';
-
-      document.getElementById('messagesList').innerHTML = msgs.map(m =>
-        `<div style="margin:6px 0;"><b>${esc(m.name)}</b> (${esc(m.contact)}): ${esc(m.body)}</div>`
-      ).join('') || 'No messages yet.';
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        box.innerHTML = '<div class="muted">Chat unavailable.</div>';
+      }
     }
 
-    async function loadOwnerDmThread() {
-      const userId = document.getElementById('ownerDmUser').value;
-      const box = document.getElementById('ownerDmThread');
-      if (!userId) {
-        box.innerHTML = '<div class="meta">Select an account user to view or send messages.</div>';
-        return;
-      }
-      const data = await api(`/api/admin/dm/${encodeURIComponent(userId)}`);
-      if (!data.messages.length) {
-        box.innerHTML = `<div class="meta">No direct messages with ${esc(data.user.username)} yet.</div>`;
-        return;
-      }
-      box.innerHTML = data.messages.map(m =>
-        `<div class="dm-item"><span class="dm-sender">${esc(m.sender)}:</span> ${esc(m.body)}</div>`
-      ).join('');
-      box.scrollTop = box.scrollHeight;
-    }
-
-    async function sendOwnerDm(e) {
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const userId = document.getElementById('ownerDmUser').value;
-      const input = document.getElementById('ownerDmInput');
-      if (!userId) return;
+      const msgEl = document.getElementById('chat-msg');
+      const sender = document.getElementById('chat-sender').value.trim() || 'Guest';
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      msgEl.textContent = '';
+      if (!message) return;
+
+      const token = getToken();
       try {
-        await api(`/api/admin/dm/${encodeURIComponent(userId)}`, {
+        const res = await fetch('/api/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body: input.value }),
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ sender, message }),
         });
+        const data = await res.json();
+        if (!res.ok) {
+          msgEl.textContent = data.error || 'Could not send message.';
+          return;
+        }
         input.value = '';
-        document.getElementById('ownerDmMsg').innerHTML = '<div class="msg-ok">Sent.</div>';
-        await loadOwnerDmThread();
+        loadChat();
       } catch (err) {
-        document.getElementById('ownerDmMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+        msgEl.textContent = 'Network error sending message.';
       }
-    }
+    });
 
-    async function createCode(e) {
-      e.preventDefault();
-      await api('/api/admin/codes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: document.getElementById('codeLabel').value }),
+    document.querySelectorAll('.tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort;
+        loadVideos();
       });
-      document.getElementById('codeLabel').value = '';
-      await loadOwnerData();
+    });
+
+    document.getElementById('search-input').addEventListener('input', () => {
+      loadVideos();
+    });
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
-    async function deleteCode(codeId) {
-      try {
-        await api(`/api/admin/codes/${encodeURIComponent(codeId)}`, { method: 'DELETE' });
-        await loadOwnerData();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-
-    (async () => {
-      applyTranslations();
-      await refreshMe();
-      await loadVideos();
-      const params = new URLSearchParams(window.location.search);
-      const vid = params.get('v');
-      if (vid && /^\d+$/.test(vid)) {
-        await openVideo(Number(vid));
-      }
-    })();
+    updateAuthUI();
+    loadVideos();
+    loadChat();
+    setInterval(loadChat, 4000);
   </script>
 </body>
 </html>
