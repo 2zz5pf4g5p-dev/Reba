@@ -19,7 +19,7 @@ Open http://localhost:3000
 ## Using it
 1. Open your site address followed by /#owner (for example https://yoursite.onrender.com/#owner) and enter ADMIN_PASSWORD. Visitors never see this link.
 2. In the Owner panel, create a code for each person and send it to them.
-3. Read contact messages in the same panel. Revoke a code to lock someone out instantly.
+3. Chat with visitors in the same panel (a red badge shows new messages). Revoke a code to lock someone out instantly.
 
 ## Deploying
 Use a host that gives you a persistent disk (Render, Railway, Fly.io, a small VPS) and set

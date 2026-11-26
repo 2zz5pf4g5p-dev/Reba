@@ -17,17 +17,18 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);pa
 button,input,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--red-hi);outline-offset:2px}
 
-/* Top: centered brand + search */
 header{position:sticky;top:0;z-index:5;text-align:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:rgba(10,10,10,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .logo{background:none;border:0;cursor:pointer;font:400 38px/1 var(--display);letter-spacing:3px;color:var(--ink);padding:0}
 .logo i{color:var(--red);font-style:normal}
-.tag{font:italic 600 13px var(--serif);color:var(--mute);margin:2px 0 10px}
+.tag{font:italic 600 13px var(--serif);color:var(--mute);margin:2px 0 8px}
+.langs{display:flex;justify-content:center;gap:6px;margin:0 0 10px}
+.lang{background:transparent;border:1px solid #444;color:var(--mute);border-radius:999px;padding:3px 14px;font:700 12px var(--body);letter-spacing:1px;cursor:pointer}
+.lang.on{background:#fff;border-color:#fff;color:#0a0a0a}
 .search{width:100%;max-width:520px;padding:10px 18px;border:1px solid var(--line);border-radius:999px;background:var(--field);text-align:center}
 .search:focus{border-color:var(--red);text-align:left}
 
 main{max-width:1100px;margin:0 auto;padding:18px 16px}
 
-/* Buttons */
 .btn{padding:11px 20px;border:2px solid var(--red);border-radius:999px;background:var(--red);color:#fff;font-weight:700;letter-spacing:.3px;cursor:pointer;white-space:nowrap}
 .btn:hover{background:var(--red-hi);border-color:var(--red-hi)}
 .btn.white{background:#fff;border-color:#fff;color:#0a0a0a}
@@ -36,12 +37,12 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px}
 .btn.sm{padding:5px 12px;font-size:13px}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
 
-/* Big intro */
 .hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:26px;padding:34px 22px 26px;margin-bottom:22px;
 background:radial-gradient(120% 90% at 85% 0%,rgba(225,29,46,.45),transparent 62%),radial-gradient(80% 60% at 0% 100%,rgba(225,29,46,.18),transparent 70%),#0d0d0d}
 .kicker{display:inline-flex;gap:8px;align-items:center;font:700 12px var(--body);letter-spacing:2.5px;color:#fff;border:1px solid #fff;border-radius:999px;padding:5px 12px}
 .kicker::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--red-hi)}
-.hero h1{font:400 clamp(60px,18vw,132px)/.88 var(--display);letter-spacing:1px;margin:16px 0 10px}
+.hero h1{font:400 clamp(46px,15vw,124px)/.88 var(--display);letter-spacing:1px;margin:16px 0 10px;overflow-wrap:anywhere}
+.hero h1.sm{font-size:clamp(36px,11vw,96px)}
 .hero h1 span{color:var(--red-hi)}
 .hero .quote{font:italic 600 clamp(18px,4.6vw,26px)/1.25 var(--serif);margin:0 0 8px}
 .lead{color:var(--mute);max-width:520px;margin:0}
@@ -51,7 +52,6 @@ background:radial-gradient(120% 90% at 85% 0%,rgba(225,29,46,.45),transparent 62
 .sec{font:400 30px/1 var(--display);letter-spacing:1.5px;margin:6px 0 16px;display:flex;align-items:center;gap:12px}
 .sec::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--red),transparent)}
 
-/* Video cards */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px 16px}
 .card{background:none;border:0;padding:0;text-align:left;cursor:pointer;width:100%;transition:transform .15s}
 .card:hover{transform:translateY(-3px)}
@@ -59,10 +59,10 @@ background:radial-gradient(120% 90% at 85% 0%,rgba(225,29,46,.45),transparent 62
 .thumb{font-size:38px;background:linear-gradient(135deg,#2a0b0f,#0d0d0d 70%)}
 .card h3{margin:10px 0 2px;font:700 16px/1.3 var(--body)}
 .meta{color:var(--mute);font-size:13px}
+.real{color:var(--red-hi);font-size:12px;font-weight:700}
 .empty{text-align:center;padding:50px 16px;color:var(--mute)}
 .empty h2{font:400 38px var(--display);color:#fff;margin:0}
 
-/* Watch page */
 .watch{display:grid;gap:18px}
 @media(min-width:900px){.watch{grid-template-columns:1fr 330px}}
 .watch>section>video{width:100%;max-height:70vh;background:#000;border-radius:18px;display:block;border:1px solid var(--line)}
@@ -73,78 +73,243 @@ background:radial-gradient(120% 90% at 85% 0%,rgba(225,29,46,.45),transparent 62
 .c{padding:10px 0;border-bottom:1px solid var(--line)}
 .side .card{margin-bottom:14px}
 
-/* Forms */
 .box{display:grid;gap:12px;max-width:460px;margin:10px auto;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px}
 .box h2,h2.t{font:400 34px/1 var(--display);letter-spacing:1px;margin:0}
 input[type=text],input[type=password],textarea{flex:1;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field)}
 input[type=text]:focus,input[type=password]:focus,textarea:focus{border-color:var(--red)}
 input[type=file]{padding:10px;border:1px dashed #555;border-radius:12px;background:var(--field)}
-.real{color:var(--red-hi);font-size:12px;font-weight:700}
 .err{color:var(--red-hi);min-height:1.3em;font-size:14px}
-.ok{color:#fff;font:400 30px var(--display)}
-.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;padding:0}
 code{background:#000;border:1px solid var(--line);padding:2px 8px;border-radius:8px;font-size:15px;letter-spacing:1px}
 h3.t{font:400 28px var(--display);letter-spacing:1px;margin:22px 0 8px}
 
-/* Bottom buttons */
+.bubbles{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;padding:4px 2px;margin:10px 0}
+.b{max-width:84%;padding:9px 14px;border-radius:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+.b.me{align-self:flex-end;background:var(--red);border-bottom-right-radius:4px}
+.b.them{align-self:flex-start;background:#262626;border-bottom-left-radius:4px}
+.b small{display:block;opacity:.7;font-size:11px;margin-top:2px}
+.chatrow{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 0;cursor:pointer}
+.dot{display:inline-block;min-width:20px;height:20px;border-radius:10px;background:var(--red);color:#fff;font:800 12px/20px var(--body);padding:0 6px;text-align:center;font-style:normal}
+
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:8;display:flex;justify-content:space-around;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(10,10,10,.94);backdrop-filter:blur(12px);border-top:2px solid var(--red)}
-.tab{flex:1;max-width:130px;background:none;border:0;border-radius:14px;padding:6px 4px;color:var(--mute);font:700 11px var(--body);letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.tab{position:relative;flex:1;max-width:130px;background:none;border:0;border-radius:14px;padding:6px 4px;color:var(--mute);font:700 11px var(--body);letter-spacing:1px;text-transform:uppercase;cursor:pointer}
 .tab span{display:block;font-size:22px;line-height:1.2;margin-bottom:2px}
 .tab.on{color:#fff;background:var(--red)}
+.badge{position:absolute;top:0;right:14%;min-width:18px;height:18px;border-radius:9px;background:#fff;color:#0a0a0a;font:800 11px/18px var(--body);padding:0 5px;font-style:normal;letter-spacing:0}
 </style>
 </head>
 <body>
 <header>
   <button class="logo" data-go="home"><i>▶</i> REBA</button>
-  <div class="tag">Private video library</div>
-  <input class="search" id="q" type="search" placeholder="Search videos" aria-label="Search videos">
+  <div class="tag" id="tag"></div>
+  <div class="langs" id="langs"></div>
+  <input class="search" id="q" type="search" aria-label="Search">
 </header>
 <main id="app"></main>
 <nav class="tabbar" id="nav"></nav>
+
+<script>
+const I18N = {
+en: {
+  tag:"Private video library", search:"Search videos",
+  t_home:"Home", t_unlock:"Unlock", t_chat:"Chat", t_upload:"Upload", t_panel:"Panel", t_logout:"Log out",
+  now:"just now", ago_m:"{n} min ago", ago_h:"{n} h ago", ago_d:"{n} d ago",
+  kick_in:"INVITE ONLY", h1a:"WATCH", h1b:"WHAT’S", h1c:"PRIVATE.", quote:"Not everything belongs to everyone.",
+  lead:"Reba is a private video library. Ask the owner for a code, unlock the videos, and watch.",
+  b_code:"I have a code", b_ask:"Ask for access", s1:"Ask the owner", s2:"Get your code", s3:"Watch & share",
+  kick_own:"OWNER MODE", o_h1a:"YOUR", o_h1b:"LIBRARY.", o_lead:"Delete videos, create access codes, and chat with visitors from the owner panel.",
+  b_panel:"Open panel", b_up:"Upload a video",
+  kick_mem:"MEMBER", m_h1:"WELCOME,", m_lead:"You’re anonymous here: everyone sees you as {name}, and only the owner knows who you are. Only the owner can delete videos.",
+  latest:"LATEST VIDEOS", none:"NO VIDEOS YET",
+  del:"Delete video", del_ok:"Delete this video for everyone?", comments:"COMMENTS", c_ph:"Comment anonymously", post:"Post",
+  u_title:"UNLOCK VIDEOS", u_lead:"Enter the access code the owner sent you.", u_watch:"Enter your access code to watch this video.",
+  u_first:"Unlock first to upload videos.", u_btn:"Unlock", u_nocode:"No code yet? Chat with the owner",
+  ch_title:"CHAT WITH THE OWNER", ch_lead:"Ask for an access code or send a question. The owner replies here.",
+  ch_name:"Your name", ch_contact:"Email or WhatsApp (optional, in case you lose this chat)", ch_msg:"Your message", ch_send:"Send",
+  ch_type:"Type a message", ch_you:"You", ch_owner:"Owner", ch_note:"This chat is saved in this browser. Come back later to see the owner’s reply.",
+  up_title:"UPLOAD A VIDEO", up_t:"Title", up_d:"Description (optional)",
+  up_note:"Max 300 MB. Your name stays hidden: only the owner sees who uploaded. Only the owner can delete videos.",
+  up_pub:"Publish", up_ing:"Uploading… keep this page open.",
+  ol_title:"OWNER LOGIN", ol_pw:"Owner password", ol_btn:"Log in",
+  p_title:"OWNER PANEL", p_codes:"Access codes", p_who:"Who is this code for?", p_make:"Create code", p_nocodes:"No codes yet.",
+  p_shows:"appears as {a}", p_inuse:"in use · {w}", p_unused:"not used yet", p_copy:"Copy", p_copied:"Copied",
+  p_reset:"Reset device", p_revoke:"Revoke", p_chats:"Chats", p_nochats:"No chats yet.", p_delete:"Delete", p_back:"Back",
+  p_revoke_ok:"Revoke this code? That person loses access right away.",
+  p_reset_ok:"Reset this code? The current device is logged out and the code works once more on a new device.",
+  p_chatdel_ok:"Delete this chat?", ch_contact_l:"Contact: {c}", err_generic:"Something went wrong."
+},
+fr: {
+  tag:"Bibliothèque vidéo privée", search:"Rechercher des vidéos",
+  t_home:"Accueil", t_unlock:"Débloquer", t_chat:"Chat", t_upload:"Ajouter", t_panel:"Panneau", t_logout:"Quitter",
+  now:"à l’instant", ago_m:"il y a {n} min", ago_h:"il y a {n} h", ago_d:"il y a {n} j",
+  kick_in:"SUR INVITATION", h1a:"REGARDEZ", h1b:"CE QUI EST", h1c:"PRIVÉ.", quote:"Tout n’est pas fait pour tout le monde.",
+  lead:"Reba est une bibliothèque vidéo privée. Demandez un code au propriétaire, débloquez les vidéos et regardez.",
+  b_code:"J’ai un code", b_ask:"Demander l’accès", s1:"Demandez au propriétaire", s2:"Recevez votre code", s3:"Regardez et partagez",
+  kick_own:"MODE PROPRIÉTAIRE", o_h1a:"VOTRE", o_h1b:"BIBLIOTHÈQUE.", o_lead:"Supprimez des vidéos, créez des codes d’accès et discutez avec les visiteurs depuis le panneau.",
+  b_panel:"Ouvrir le panneau", b_up:"Ajouter une vidéo",
+  kick_mem:"MEMBRE", m_h1:"BIENVENUE,", m_lead:"Ici, vous êtes anonyme : tout le monde vous voit comme {name}, et seul le propriétaire sait qui vous êtes. Seul le propriétaire peut supprimer des vidéos.",
+  latest:"DERNIÈRES VIDÉOS", none:"AUCUNE VIDÉO",
+  del:"Supprimer la vidéo", del_ok:"Supprimer cette vidéo pour tout le monde ?", comments:"COMMENTAIRES", c_ph:"Commentez anonymement", post:"Publier",
+  u_title:"DÉBLOQUER LES VIDÉOS", u_lead:"Entrez le code d’accès envoyé par le propriétaire.", u_watch:"Entrez votre code d’accès pour regarder cette vidéo.",
+  u_first:"Débloquez d’abord pour ajouter des vidéos.", u_btn:"Débloquer", u_nocode:"Pas de code ? Discutez avec le propriétaire",
+  ch_title:"DISCUTER AVEC LE PROPRIÉTAIRE", ch_lead:"Demandez un code d’accès ou posez une question. Le propriétaire répond ici.",
+  ch_name:"Votre nom", ch_contact:"E-mail ou WhatsApp (facultatif, au cas où vous perdez ce chat)", ch_msg:"Votre message", ch_send:"Envoyer",
+  ch_type:"Écrivez un message", ch_you:"Vous", ch_owner:"Propriétaire", ch_note:"Ce chat est enregistré dans ce navigateur. Revenez plus tard pour lire la réponse du propriétaire.",
+  up_title:"AJOUTER UNE VIDÉO", up_t:"Titre", up_d:"Description (facultatif)",
+  up_note:"300 Mo max. Votre nom reste caché : seul le propriétaire voit qui a ajouté la vidéo. Seul le propriétaire peut supprimer des vidéos.",
+  up_pub:"Publier", up_ing:"Envoi en cours… gardez cette page ouverte.",
+  ol_title:"CONNEXION PROPRIÉTAIRE", ol_pw:"Mot de passe propriétaire", ol_btn:"Se connecter",
+  p_title:"PANNEAU PROPRIÉTAIRE", p_codes:"Codes d’accès", p_who:"Pour qui est ce code ?", p_make:"Créer un code", p_nocodes:"Aucun code.",
+  p_shows:"apparaît comme {a}", p_inuse:"utilisé · {w}", p_unused:"pas encore utilisé", p_copy:"Copier", p_copied:"Copié",
+  p_reset:"Réinitialiser l’appareil", p_revoke:"Révoquer", p_chats:"Discussions", p_nochats:"Aucune discussion.", p_delete:"Supprimer", p_back:"Retour",
+  p_revoke_ok:"Révoquer ce code ? Cette personne perd l’accès immédiatement.",
+  p_reset_ok:"Réinitialiser ce code ? L’appareil actuel est déconnecté et le code fonctionne à nouveau sur un nouvel appareil.",
+  p_chatdel_ok:"Supprimer cette discussion ?", ch_contact_l:"Contact : {c}", err_generic:"Une erreur s’est produite.",
+  errs: {
+    "Enter your access code first.":"Entrez d’abord votre code d’accès.",
+    "That code is not valid.":"Ce code n’est pas valide.",
+    "This code has already been used on another device. Ask the owner for a new one.":"Ce code a déjà été utilisé sur un autre appareil. Demandez-en un nouveau au propriétaire.",
+    "Wrong password.":"Mot de passe incorrect.",
+    "Too many tries. Please wait a while.":"Trop d’essais. Veuillez patienter.",
+    "Choose a video file.":"Choisissez un fichier vidéo.",
+    "Add a title.":"Ajoutez un titre.",
+    "Write something first.":"Écrivez d’abord quelque chose.",
+    "Video not found.":"Vidéo introuvable.",
+    "Owner only.":"Réservé au propriétaire.",
+    "Fill in your name and a message.":"Indiquez votre nom et un message.",
+    "Add a name for this code.":"Ajoutez un nom pour ce code.",
+    "Not found.":"Introuvable.",
+    "Chat not found.":"Discussion introuvable.",
+    "Something went wrong.":"Une erreur s’est produite."
+  }
+},
+rw: {
+  tag:"Isomero ry’amashusho y’ibanga", search:"Shakisha amashusho",
+  t_home:"Ahabanza", t_unlock:"Fungura", t_chat:"Ganira", t_upload:"Ohereza", t_panel:"Ikibaho", t_logout:"Sohoka",
+  now:"ubu nyine", ago_m:"hashize iminota {n}", ago_h:"hashize amasaha {n}", ago_d:"hashize iminsi {n}",
+  kick_in:"KU BUTUMIRE GUSA", h1a:"REBA", h1b:"IBY’", h1c:"IBANGA.", quote:"Ntabwo byose ari ibya bose.",
+  lead:"Reba ni isomero ry’amashusho y’ibanga. Saba nyir’urubuga kode, ufungure amashusho, hanyuma urebe.",
+  b_code:"Mfite kode", b_ask:"Saba kode", s1:"Baza nyir’urubuga", s2:"Wakire kode yawe", s3:"Reba kandi usangize",
+  kick_own:"UBURYO BWA NYIR’URUBUGA", o_h1a:"ISOMERO", o_h1b:"RYAWE.", o_lead:"Siba amashusho, ukore kode zo kwinjira, kandi uganire n’abashyitsi uri mu kibaho.",
+  b_panel:"Fungura ikibaho", b_up:"Ohereza videwo",
+  kick_mem:"UMUNYAMURYANGO", m_h1:"MURAKAZA NEZA,", m_lead:"Hano uri uw’ibanga: bose bakubona nka {name}, kandi nyir’urubuga wenyine ni we uzi uwo uri we. Nyir’urubuga wenyine ni we ushobora gusiba amashusho.",
+  latest:"AMASHUSHO ASHYA", none:"NTA MASHUSHO ARAHARI",
+  del:"Siba videwo", del_ok:"Gusiba iyi videwo kuri bose?", comments:"IBITEKEREZO", c_ph:"Tanga igitekerezo mu ibanga", post:"Ohereza",
+  u_title:"FUNGURA AMASHUSHO", u_lead:"Andika kode nyir’urubuga yaguhaye.", u_watch:"Andika kode yawe kugira ngo urebe iyi videwo.",
+  u_first:"Banza ufungure kugira ngo wohereze amashusho.", u_btn:"Fungura", u_nocode:"Nta kode ufite? Ganira na nyir’urubuga",
+  ch_title:"GANIRA NA NYIR’URUBUGA", ch_lead:"Saba kode cyangwa ubaze ikibazo. Nyir’urubuga azagusubiriza hano.",
+  ch_name:"Izina ryawe", ch_contact:"Imeyili cyangwa WhatsApp (si ngombwa, mu gihe wabura iki kiganiro)", ch_msg:"Ubutumwa bwawe", ch_send:"Ohereza",
+  ch_type:"Andika ubutumwa", ch_you:"Wowe", ch_owner:"Nyir’urubuga", ch_note:"Iki kiganiro kibitswe muri iyi browser. Garuka nyuma urebe igisubizo cya nyir’urubuga.",
+  up_title:"OHEREZA VIDEWO", up_t:"Umutwe", up_d:"Ibisobanuro (si ngombwa)",
+  up_note:"Ntarenza MB 300. Izina ryawe rigumaho ari ibanga: nyir’urubuga wenyine ni we ubona uwohereje. Nyir’urubuga wenyine ni we usiba amashusho.",
+  up_pub:"Tangaza", up_ing:"Kohereza… ntufunge uru rupapuro.",
+  ol_title:"KWINJIRA KWA NYIR’URUBUGA", ol_pw:"Ijambo ry’ibanga rya nyir’urubuga", ol_btn:"Injira",
+  p_title:"IKIBAHO CYA NYIR’URUBUGA", p_codes:"Kode zo kwinjira", p_who:"Iyi kode ni iya nde?", p_make:"Kora kode", p_nocodes:"Nta kode ziraboneka.",
+  p_shows:"agaragara nka {a}", p_inuse:"irakoreshwa · {w}", p_unused:"ntirakoreshwa", p_copy:"Koporora", p_copied:"Byakoporowe",
+  p_reset:"Subiza igikoresho", p_revoke:"Hagarika", p_chats:"Ibiganiro", p_nochats:"Nta biganiro biraboneka.", p_delete:"Siba", p_back:"Subira inyuma",
+  p_revoke_ok:"Guhagarika iyi kode? Uyu muntu ahita atakaza uburenganzira.",
+  p_reset_ok:"Gusubiza iyi kode? Igikoresho kiriho kirasohoka, kandi kode yongera gukora ku gikoresho gishya.",
+  p_chatdel_ok:"Gusiba iki kiganiro?", ch_contact_l:"Uko mumuvugisha: {c}", err_generic:"Hari ikitagenze neza.",
+  errs: {
+    "Enter your access code first.":"Banza wandike kode yawe.",
+    "That code is not valid.":"Iyi kode ntiyemewe.",
+    "This code has already been used on another device. Ask the owner for a new one.":"Iyi kode yamaze gukoreshwa ku kindi gikoresho. Saba nyir’urubuga indi.",
+    "Wrong password.":"Ijambo ry’ibanga si ryo.",
+    "Too many tries. Please wait a while.":"Wagerageje kenshi. Tegereza gato.",
+    "Choose a video file.":"Hitamo videwo.",
+    "Add a title.":"Shyiraho umutwe.",
+    "Write something first.":"Banza wandike ikintu.",
+    "Video not found.":"Videwo ntiyabonetse.",
+    "Owner only.":"Ni iya nyir’urubuga gusa.",
+    "Fill in your name and a message.":"Andika izina ryawe n’ubutumwa.",
+    "Add a name for this code.":"Shyiraho izina kuri iyi kode.",
+    "Not found.":"Ntibonetse.",
+    "Chat not found.":"Ikiganiro ntikibonetse.",
+    "Something went wrong.":"Hari ikitagenze neza."
+  }
+}
+};
+</script>
 <script>
 const $ = id => document.getElementById(id), app = $('app');
-let me = null, active = 'home';
+let me = null, active = 'home', view = { name: 'home' }, poll = null, unread = 0;
+const ls = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} }
+};
+const nl = (navigator.language || 'en').slice(0, 2);
+let lang = ls.get('reba-lang') || (nl === 'fr' ? 'fr' : (nl === 'rw' || nl === 'rn') ? 'rw' : 'en');
+if (!I18N[lang]) lang = 'en';
+const t = (k, v) => {
+  let s = I18N[lang][k] ?? I18N.en[k] ?? k;
+  if (v) for (const x in v) s = s.replace('{' + x + '}', () => v[x]);
+  return s;
+};
+const errText = e => (I18N[lang].errs && I18N[lang].errs[e.message]) || e.message;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ago = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.floor(m / 60) + ' h ago' : Math.floor(m / 1440) + ' d ago'; };
+const ago = tm => { const m = Math.floor((Date.now() - tm) / 60000); return m < 1 ? t('now') : m < 60 ? t('ago_m', { n: m }) : m < 1440 ? t('ago_h', { n: Math.floor(m / 60) }) : t('ago_d', { n: Math.floor(m / 1440) }); };
 const isAdmin = () => me && me.role === 'admin';
 const who = o => esc(o.author) + (o.real_name ? ` <span class="real">(${esc(o.real_name)})</span>` : '');
 
 async function api(path, opts = {}) {
-  const headers = {};
+  const headers = { ...(opts.headers || {}) };
   if (opts.json) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(opts.json); }
   const r = await fetch('/api' + path, { ...opts, headers });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || 'Something went wrong.');
   return d;
 }
+const chatApi = (path, opts = {}) => api(path, { ...opts, headers: { 'x-chat-token': ls.get('reba-chat') || '' } });
 
-const tab = (go, icon, label) => `<button class="tab ${active === go ? 'on' : ''}" data-go="${go}"><span>${icon}</span>${label}</button>`;
+const tab = (go, icon, label, badge) => `<button class="tab ${active === go ? 'on' : ''}" data-go="${go}"><span>${icon}</span>${label}${badge ? `<em class="badge">${badge}</em>` : ''}</button>`;
 function nav() {
+  const n = unread > 0 ? unread : 0;
   $('nav').innerHTML = isAdmin()
-    ? tab('home', '🏠', 'Home') + tab('upload', '⬆️', 'Upload') + tab('admin', '👑', 'Panel') + tab('logout', '🚪', 'Log out')
+    ? tab('home', '🏠', t('t_home')) + tab('upload', '⬆️', t('t_upload')) + tab('admin', '👑', t('t_panel'), n) + tab('logout', '🚪', t('t_logout'))
     : me
-      ? tab('home', '🏠', 'Home') + tab('upload', '⬆️', 'Upload') + tab('contact', '✉️', 'Contact') + tab('logout', '🚪', 'Log out')
-      : tab('home', '🏠', 'Home') + tab('unlock', '🔓', 'Unlock') + tab('contact', '✉️', 'Contact');
+      ? tab('home', '🏠', t('t_home')) + tab('upload', '⬆️', t('t_upload')) + tab('chat', '💬', t('t_chat'), n) + tab('logout', '🚪', t('t_logout'))
+      : tab('home', '🏠', t('t_home')) + tab('unlock', '🔓', t('t_unlock')) + tab('chat', '💬', t('t_chat'), n);
 }
 const setActive = a => { active = a; nav(); };
 
+async function checkUnread() {
+  try {
+    if (isAdmin()) unread = (await api('/admin/unread')).n;
+    else if (ls.get('reba-chat')) unread = (await chatApi('/chat/unread')).n;
+    else unread = 0;
+  } catch {}
+  nav();
+}
+
+const LANGS = { en: 'English', fr: 'Français', rw: 'Kinyarwanda' };
+function applyLang() {
+  document.documentElement.lang = lang;
+  $('tag').textContent = t('tag');
+  $('q').placeholder = t('search');
+  $('q').setAttribute('aria-label', t('search'));
+  $('langs').innerHTML = Object.keys(LANGS).map(l => `<button class="lang ${l === lang ? 'on' : ''}" data-lang="${l}" aria-label="${LANGS[l]}">${l.toUpperCase()}</button>`).join('');
+  nav();
+}
+function setLang(l) { lang = l; ls.set('reba-lang', l); applyLang(); go(view.name, view.arg, true); }
+
 const card = v => `<button class="card" data-id="${v.id}">${me
   ? `<video src="/stream/${v.id}#t=1" preload="metadata" muted playsinline></video>`
-  : '<div class="thumb">🔒</div>'}<h3>${esc(v.title)}</h3><div class="meta">${who(v)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div></button>`;
+  : '<div class="thumb">🔒</div>'}<h3>${esc(v.title)}</h3><div class="meta">${who(v)} · 👁 ${v.views} · ${ago(v.at)}</div></button>`;
 
 function hero() {
-  if (isAdmin()) return `<section class="hero"><span class="kicker">OWNER MODE</span><h1>YOUR<br><span>LIBRARY.</span></h1><p class="lead">Delete videos, create access codes, and read messages from the owner panel.</p><div class="row"><button class="btn" data-go="admin">Open panel</button><button class="btn white" data-go="upload">Upload a video</button></div></section>`;
-  if (me) return `<section class="hero"><span class="kicker">MEMBER</span><h1>WELCOME,<br><span>${esc(me.name.toUpperCase())}.</span></h1><p class="lead">You’re anonymous here: everyone sees you as <b>${esc(me.name)}</b>, and only the owner knows who you are. Only the owner can delete videos.</p><div class="row"><button class="btn" data-go="upload">Upload a video</button></div></section>`;
-  return `<section class="hero"><span class="kicker">INVITE ONLY</span><h1>WATCH<br>WHAT’S<br><span>PRIVATE.</span></h1><p class="quote">Not everything belongs to everyone.</p><p class="lead">Reba is a private video library. Ask the owner for a code, unlock the videos, and watch.</p><div class="row"><button class="btn" data-go="unlock">I have a code</button><button class="btn white" data-go="contact">Ask for access</button></div></section>
-  <div class="steps"><div><b>1</b>Ask the owner</div><div><b>2</b>Get your code</div><div><b>3</b>Watch &amp; share</div></div>`;
+  if (isAdmin()) return `<section class="hero"><span class="kicker">${t('kick_own')}</span><h1 class="sm">${t('o_h1a')}<br><span>${t('o_h1b')}</span></h1><p class="lead">${t('o_lead')}</p><div class="row"><button class="btn" data-go="admin">${t('b_panel')}</button><button class="btn white" data-go="upload">${t('b_up')}</button></div></section>`;
+  if (me) return `<section class="hero"><span class="kicker">${t('kick_mem')}</span><h1 class="sm">${t('m_h1')}<br><span>${esc(me.name.toUpperCase())}.</span></h1><p class="lead">${t('m_lead', { name: '<b>' + esc(me.name) + '</b>' })}</p><div class="row"><button class="btn" data-go="upload">${t('b_up')}</button></div></section>`;
+  return `<section class="hero"><span class="kicker">${t('kick_in')}</span><h1>${t('h1a')}<br>${t('h1b')}<br><span>${t('h1c')}</span></h1><p class="quote">${t('quote')}</p><p class="lead">${t('lead')}</p><div class="row"><button class="btn" data-go="unlock">${t('b_code')}</button><button class="btn white" data-go="chat">${t('b_ask')}</button></div></section>
+  <div class="steps"><div><b>1</b>${t('s1')}</div><div><b>2</b>${t('s2')}</div><div><b>3</b>${t('s3')}</div></div>`;
 }
 
 async function home() {
   setActive('home');
   const q = $('q').value;
   const list = await api('/videos?q=' + encodeURIComponent(q));
-  app.innerHTML = (q ? '' : hero()) + '<h2 class="sec">LATEST VIDEOS</h2>' +
-    (list.length ? `<div class="grid">${list.map(card).join('')}</div>` : '<div class="empty"><h2>NO VIDEOS YET</h2></div>');
+  app.innerHTML = (q ? '' : hero()) + `<h2 class="sec">${t('latest')}</h2>` +
+    (list.length ? `<div class="grid">${list.map(card).join('')}</div>` : `<div class="empty"><h2>${t('none')}</h2></div>`);
 }
 
 async function watch(id, noview) {
@@ -153,108 +318,165 @@ async function watch(id, noview) {
   app.innerHTML = `<div class="watch"><section>
     <video src="/stream/${v.id}" controls autoplay playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false"></video>
     <h1>${esc(v.title)}</h1>
-    <div class="meta">${who(v)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div>
-    <div class="row"><button class="btn ghost ${v.liked ? 'on' : ''}" id="like">♥ ${v.likes}</button>${isAdmin() ? '<button class="btn ghost" id="del">Delete video</button>' : ''}</div>
+    <div class="meta">${who(v)} · 👁 ${v.views} · ${ago(v.at)}</div>
+    <div class="row"><button class="btn ghost ${v.liked ? 'on' : ''}" id="like">♥ ${v.likes}</button>${isAdmin() ? `<button class="btn ghost" id="del">${t('del')}</button>` : ''}</div>
     ${v.descr ? `<div class="desc">${esc(v.descr)}</div>` : ''}
-    <h2>${v.comments.length} COMMENT${v.comments.length === 1 ? '' : 'S'}</h2>
-    <div class="cm"><input id="ci" type="text" placeholder="Comment anonymously" aria-label="Add a comment"><button class="btn" id="cb">Post</button></div>
+    <h2>${t('comments')} (${v.comments.length})</h2>
+    <div class="cm"><input id="ci" type="text" placeholder="${t('c_ph')}" aria-label="${t('c_ph')}"><button class="btn" id="cb">${t('post')}</button></div>
     <div class="err" id="err"></div>
     ${v.comments.map(c => `<div class="c"><b>${who(c)}</b> <span class="meta">${ago(c.at)}</span><br>${esc(c.body)}</div>`).join('')}
   </section><aside class="side">${all.filter(x => x.id !== v.id).map(card).join('')}</aside></div>`;
-  const fail = e => $('err').textContent = e.message;
+  const fail = e => $('err').textContent = errText(e);
   $('like').onclick = () => api('/videos/' + id + '/like', { method: 'POST' }).then(r => { $('like').textContent = '♥ ' + r.likes; $('like').classList.toggle('on', r.liked); }).catch(fail);
-  $('cb').onclick = () => api('/videos/' + id + '/comments', { method: 'POST', json: { body: $('ci').value } }).then(() => watch(id, true)).catch(fail);
-  if ($('del')) $('del').onclick = () => confirm('Delete this video for everyone?') && api('/videos/' + id, { method: 'DELETE' }).then(home);
+  $('cb').onclick = () => api('/videos/' + id + '/comments', { method: 'POST', json: { body: $('ci').value } }).then(() => go('watch', id, true)).catch(fail);
+  if ($('del')) $('del').onclick = () => confirm(t('del_ok')) && api('/videos/' + id, { method: 'DELETE' }).then(() => go('home'));
 }
 
-function unlock(msg) {
+function unlock(key) {
   setActive('unlock');
-  app.innerHTML = `<div class="box"><h2>UNLOCK VIDEOS</h2>
-    <p class="meta" style="margin:0">${msg || 'Enter the access code the owner sent you.'}</p>
-    <input id="code" type="text" placeholder="XXXXX-XXXXX" aria-label="Access code" autocapitalize="characters" autocomplete="off">
-    <div class="err" id="err"></div><button class="btn" id="go">Unlock</button>
-    <button class="link" data-go="contact">No code yet? Contact the owner</button></div>`;
+  app.innerHTML = `<div class="box"><h2>${t('u_title')}</h2>
+    <p class="meta" style="margin:0">${t(key || 'u_lead')}</p>
+    <input id="code" type="text" placeholder="XXXXX-XXXXX" aria-label="Code" autocapitalize="characters" autocomplete="off">
+    <div class="err" id="err"></div><button class="btn" id="go">${t('u_btn')}</button>
+    <button class="link" data-go="chat">${t('u_nocode')}</button></div>`;
   $('go').onclick = () => api('/redeem', { method: 'POST', json: { code: $('code').value } })
-    .then(async () => { me = await api('/me'); home(); }).catch(e => $('err').textContent = e.message);
+    .then(async () => { me = await api('/me'); go('home'); checkUnread(); }).catch(e => $('err').textContent = errText(e));
 }
 
-function contact() {
-  setActive('contact');
-  app.innerHTML = `<div class="box"><h2>CONTACT THE OWNER</h2>
-    <p class="meta" style="margin:0">Ask for an access code or send a question. The owner replies using the contact info you give.</p>
-    <input id="n" type="text" placeholder="Your name" aria-label="Your name">
-    <input id="ct" type="text" placeholder="Email or WhatsApp number" aria-label="Email or WhatsApp number">
-    <textarea id="m" rows="4" placeholder="Your message" aria-label="Your message"></textarea>
-    <div class="err" id="err"></div><button class="btn" id="send">Send</button></div>`;
-  $('send').onclick = () => api('/contact', { method: 'POST', json: { name: $('n').value, contact: $('ct').value, message: $('m').value } })
-    .then(() => app.innerHTML = '<div class="box"><p class="ok">MESSAGE SENT.</p><p class="meta">The owner will reply using the contact info you gave.</p></div>')
-    .catch(e => $('err').textContent = e.message);
+/* ---------- chat (visitor side) ---------- */
+const bubbles = (msgs, mine, label) => msgs.map(m => `<div class="b ${m.sender === mine ? 'me' : 'them'}">${esc(m.body)}<small>${label(m)} · ${ago(m.at)}</small></div>`).join('');
+const paint = (html) => { const el = $('bubbles'); if (!el) return; const near = el.scrollHeight - el.scrollTop - el.clientHeight < 90; el.innerHTML = html; if (near) el.scrollTop = el.scrollHeight; };
+
+function chatStart() {
+  app.innerHTML = `<div class="box"><h2>${t('ch_title')}</h2><p class="meta" style="margin:0">${t('ch_lead')}</p>
+    <input id="n" type="text" placeholder="${t('ch_name')}" aria-label="${t('ch_name')}">
+    <input id="ct" type="text" placeholder="${t('ch_contact')}" aria-label="${t('ch_contact')}">
+    <textarea id="m" rows="4" placeholder="${t('ch_msg')}" aria-label="${t('ch_msg')}"></textarea>
+    <div class="err" id="err"></div><button class="btn" id="send">${t('ch_send')}</button>
+    <p class="meta" style="margin:0">${t('ch_note')}</p></div>`;
+  $('send').onclick = () => api('/chat/start', { method: 'POST', json: { name: $('n').value, contact: $('ct').value, message: $('m').value } })
+    .then(r => { ls.set('reba-chat', r.token); go('chat'); }).catch(e => $('err').textContent = errText(e));
+}
+
+async function chat() {
+  setActive('chat');
+  if (!ls.get('reba-chat')) return chatStart();
+  let d;
+  try { d = await chatApi('/chat?read=1'); }
+  catch (e) { if (e.message === 'Chat not found.') { ls.del('reba-chat'); return chatStart(); } throw e; }
+  unread = 0; nav();
+  const label = m => m.sender === 'owner' ? t('ch_owner') : t('ch_you');
+  app.innerHTML = `<h2 class="t">${t('ch_title')}</h2><p class="meta" style="margin:6px 0 0">${t('ch_note')}</p>
+    <div class="bubbles" id="bubbles">${bubbles(d.messages, 'visitor', label)}</div>
+    <div class="cm"><input id="ci" type="text" placeholder="${t('ch_type')}" aria-label="${t('ch_type')}"><button class="btn" id="cb">${t('ch_send')}</button></div>
+    <div class="err" id="err"></div>`;
+  $('bubbles').scrollTop = $('bubbles').scrollHeight;
+  const refresh = async () => { try { const r = await chatApi('/chat?read=1'); paint(bubbles(r.messages, 'visitor', label)); } catch {} };
+  const send = () => { const body = $('ci').value; if (!body.trim()) return; chatApi('/chat/send', { method: 'POST', json: { body } }).then(() => { $('ci').value = ''; $('bubbles').scrollTop = 1e9; return refresh(); }).catch(e => $('err').textContent = errText(e)); };
+  $('cb').onclick = send;
+  $('ci').onkeydown = e => { if (e.key === 'Enter') send(); };
+  poll = setInterval(refresh, 6000);
 }
 
 function uploadForm() {
-  if (!me) return unlock('Unlock first to upload videos.');
+  if (!me) return go('unlock', 'u_first');
   setActive('upload');
-  app.innerHTML = `<div class="box"><h2>UPLOAD A VIDEO</h2>
-    <input id="f" type="file" accept="video/*" aria-label="Video file">
-    <input id="t" type="text" placeholder="Title" aria-label="Title">
-    <input id="d" type="text" placeholder="Description (optional)" aria-label="Description">
-    <p class="meta" style="margin:0">Max 300 MB. Your name stays hidden: only the owner sees who uploaded. Only the owner can delete videos.</p>
-    <div class="err" id="err"></div><button class="btn" id="go">Publish</button></div>`;
+  app.innerHTML = `<div class="box"><h2>${t('up_title')}</h2>
+    <input id="f" type="file" accept="video/*" aria-label="Video">
+    <input id="t" type="text" placeholder="${t('up_t')}" aria-label="${t('up_t')}">
+    <input id="d" type="text" placeholder="${t('up_d')}" aria-label="${t('up_d')}">
+    <p class="meta" style="margin:0">${t('up_note')}</p>
+    <div class="err" id="err"></div><button class="btn" id="go">${t('up_pub')}</button></div>`;
   $('f').onchange = () => { if ($('f').files[0] && !$('t').value) $('t').value = $('f').files[0].name.replace(/\.[^.]+$/, ''); };
   $('go').onclick = async () => {
     const fd = new FormData();
     fd.append('title', $('t').value); fd.append('descr', $('d').value);
     if ($('f').files[0]) fd.append('video', $('f').files[0]);
-    $('err').textContent = 'Uploading… keep this page open.';
-    try { const r = await api('/videos', { method: 'POST', body: fd }); watch(r.id); }
-    catch (e) { $('err').textContent = e.message; }
+    $('err').textContent = t('up_ing');
+    try { const r = await api('/videos', { method: 'POST', body: fd }); go('watch', r.id); }
+    catch (e) { $('err').textContent = errText(e); }
   };
 }
 
+/* ---------- owner ---------- */
 function adminLogin() {
   setActive('admin');
-  app.innerHTML = `<div class="box"><h2>OWNER LOGIN</h2>
-    <input id="pw" type="password" placeholder="Owner password" aria-label="Owner password" autocomplete="current-password">
-    <div class="err" id="err"></div><button class="btn" id="go">Log in</button></div>`;
+  app.innerHTML = `<div class="box"><h2>${t('ol_title')}</h2>
+    <input id="pw" type="password" placeholder="${t('ol_pw')}" aria-label="${t('ol_pw')}" autocomplete="current-password">
+    <div class="err" id="err"></div><button class="btn" id="go">${t('ol_btn')}</button></div>`;
   $('go').onclick = () => api('/admin/login', { method: 'POST', json: { password: $('pw').value } })
-    .then(async () => { me = await api('/me'); adminPanel(); }).catch(e => $('err').textContent = e.message);
+    .then(async () => { me = await api('/me'); go('admin'); checkUnread(); }).catch(e => $('err').textContent = errText(e));
 }
 
+const chatRows = chats => chats.map(c => `<button class="chatrow" data-chat="${c.id}"><b>${esc(c.name)}</b> ${c.unread ? `<em class="dot">${c.unread}</em>` : ''} <span class="meta">${ago(c.last_at)}</span><br><span class="meta">${esc((c.last_body || '').slice(0, 90))}</span></button>`).join('') || `<p class="meta">${t('p_nochats')}</p>`;
+
 async function adminPanel() {
-  if (!isAdmin()) return adminLogin();
+  if (!isAdmin()) return go('adminlogin');
   setActive('admin');
-  const [msgs, codes] = await Promise.all([api('/admin/messages'), api('/admin/codes')]);
-  app.innerHTML = `<h2 class="t">OWNER PANEL</h2>
-    <h3 class="t">Access codes</h3>
-    <div class="cm"><input id="lab" type="text" placeholder="Who is this code for?" aria-label="Who is this code for"><button class="btn" id="mk">Create code</button></div>
+  const [chats, codes] = await Promise.all([api('/admin/chats'), api('/admin/codes')]);
+  app.innerHTML = `<h2 class="t">${t('p_title')}</h2>
+    <h3 class="t">${t('p_chats')}</h3>
+    <div id="chatlist">${chatRows(chats)}</div>
+    <h3 class="t">${t('p_codes')}</h3>
+    <div class="cm"><input id="lab" type="text" placeholder="${t('p_who')}" aria-label="${t('p_who')}"><button class="btn" id="mk">${t('p_make')}</button></div>
     <div class="err" id="err"></div>
-    ${codes.map(c => `<div class="c"><b>${esc(c.label)}</b> <span class="meta">shows as ${esc(c.alias)}</span> <code>${esc(c.code)}</code> <span class="meta">${c.claimed_at ? 'in use · since ' + ago(c.claimed_at) : 'not used yet'}</span><br><button class="btn ghost sm" data-copy="${esc(c.code)}">Copy</button> ${c.claimed_at ? `<button class="btn ghost sm" data-reset="${c.id}">Reset device</button> ` : ''}<button class="btn ghost sm" data-rev="${c.id}">Revoke</button></div>`).join('') || '<p class="meta">No codes yet.</p>'}
-    <h3 class="t">Messages (${msgs.length})</h3>
-    ${msgs.map(m => `<div class="c"><b>${esc(m.name)}</b> · ${esc(m.contact)} <span class="meta">${ago(m.at)}</span><br>${esc(m.body)}<br><button class="btn ghost sm" data-dm="${m.id}">Delete</button></div>`).join('') || '<p class="meta">No messages yet.</p>'}`;
-  $('mk').onclick = () => api('/admin/codes', { method: 'POST', json: { label: $('lab').value } }).then(adminPanel).catch(e => $('err').textContent = e.message);
+    ${codes.map(c => `<div class="c"><b>${esc(c.label)}</b> <span class="meta">${t('p_shows', { a: esc(c.alias) })}</span> <code>${esc(c.code)}</code> <span class="meta">${c.claimed_at ? t('p_inuse', { w: ago(c.claimed_at) }) : t('p_unused')}</span><br><button class="btn ghost sm" data-copy="${esc(c.code)}">${t('p_copy')}</button> ${c.claimed_at ? `<button class="btn ghost sm" data-reset="${c.id}">${t('p_reset')}</button> ` : ''}<button class="btn ghost sm" data-rev="${c.id}">${t('p_revoke')}</button></div>`).join('') || `<p class="meta">${t('p_nocodes')}</p>`}`;
+  $('mk').onclick = () => api('/admin/codes', { method: 'POST', json: { label: $('lab').value } }).then(() => go('admin', null, true)).catch(e => $('err').textContent = errText(e));
+  poll = setInterval(async () => { try { const c = await api('/admin/chats'); const el = $('chatlist'); if (el) el.innerHTML = chatRows(c); checkUnread(); } catch {} }, 8000);
+}
+
+async function adminChat(id) {
+  if (!isAdmin()) return go('adminlogin');
+  setActive('admin');
+  const d = await api('/admin/chats/' + id);
+  const label = m => m.sender === 'owner' ? t('ch_you') : esc(d.name);
+  app.innerHTML = `<button class="link" data-go="admin">← ${t('p_back')}</button>
+    <h2 class="t" style="margin-top:10px">${esc(d.name)}</h2>
+    ${d.contact ? `<p class="meta" style="margin:4px 0 0">${t('ch_contact_l', { c: esc(d.contact) })}</p>` : ''}
+    <div class="bubbles" id="bubbles">${bubbles(d.messages, 'owner', label)}</div>
+    <div class="cm"><input id="ci" type="text" placeholder="${t('ch_type')}" aria-label="${t('ch_type')}"><button class="btn" id="cb">${t('ch_send')}</button></div>
+    <div class="err" id="err"></div>
+    <button class="btn ghost sm" id="delchat">${t('p_delete')}</button>`;
+  $('bubbles').scrollTop = $('bubbles').scrollHeight;
+  checkUnread();
+  const refresh = async () => { try { const r = await api('/admin/chats/' + id); paint(bubbles(r.messages, 'owner', label)); } catch {} };
+  const send = () => { const body = $('ci').value; if (!body.trim()) return; api('/admin/chats/' + id + '/reply', { method: 'POST', json: { body } }).then(() => { $('ci').value = ''; $('bubbles').scrollTop = 1e9; return refresh(); }).catch(e => $('err').textContent = errText(e)); };
+  $('cb').onclick = send;
+  $('ci').onkeydown = e => { if (e.key === 'Enter') send(); };
+  $('delchat').onclick = () => confirm(t('p_chatdel_ok')) && api('/admin/chats/' + id, { method: 'DELETE' }).then(() => go('admin'));
+  poll = setInterval(refresh, 6000);
+}
+
+/* ---------- routing ---------- */
+const routes = { home, unlock, chat, upload: uploadForm, adminlogin: adminLogin, admin: adminPanel, adminchat: adminChat, watch };
+const showErr = err => { app.innerHTML = '<div class="empty"><p>' + esc(errText(err)) + '</p></div>'; };
+function go(name, arg, quiet) {
+  clearInterval(poll);
+  view = { name, arg };
+  if (!quiet) window.scrollTo(0, 0);
+  return Promise.resolve(routes[name](arg, quiet)).catch(showErr);
 }
 
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-go],[data-id],[data-copy],[data-rev],[data-dm],[data-reset]');
-  if (!t) return;
+  const el = e.target.closest('[data-go],[data-id],[data-copy],[data-rev],[data-reset],[data-chat],[data-lang]');
+  if (!el) return;
+  const d = el.dataset;
   try {
-    if (t.dataset.id) { me ? watch(t.dataset.id) : unlock('Enter your access code to watch this video.'); }
-    else if (t.dataset.copy) { await navigator.clipboard.writeText(t.dataset.copy); t.textContent = 'Copied'; return; }
-    else if (t.dataset.rev) { if (confirm('Revoke this code? That person loses access right away.')) { await api('/admin/codes/' + t.dataset.rev, { method: 'DELETE' }); adminPanel(); } return; }
-    else if (t.dataset.reset) { if (confirm('Reset this code? The current device is logged out and the code works once more on a new device.')) { await api('/admin/codes/' + t.dataset.reset + '/reset', { method: 'POST' }); adminPanel(); } return; }
-    else if (t.dataset.dm) { await api('/admin/messages/' + t.dataset.dm, { method: 'DELETE' }); adminPanel(); return; }
-    else {
-      const g = t.dataset.go;
-      if (g === 'logout') { await api('/logout', { method: 'POST' }); me = null; history.replaceState(null, '', location.pathname); home(); }
-      else ({ home, unlock, contact, upload: uploadForm, adminlogin: adminLogin, admin: adminPanel })[g]();
-    }
-    window.scrollTo(0, 0);
-  } catch (err) { app.innerHTML = '<div class="empty"><p>' + esc(err.message) + '</p></div>'; }
+    if (d.lang) return setLang(d.lang);
+    if (d.id) return me ? go('watch', d.id) : go('unlock', 'u_watch');
+    if (d.chat) return go('adminchat', d.chat);
+    if (d.copy) { await navigator.clipboard.writeText(d.copy); el.textContent = t('p_copied'); return; }
+    if (d.rev) { if (confirm(t('p_revoke_ok'))) { await api('/admin/codes/' + d.rev, { method: 'DELETE' }); go('admin', null, true); } return; }
+    if (d.reset) { if (confirm(t('p_reset_ok'))) { await api('/admin/codes/' + d.reset + '/reset', { method: 'POST' }); go('admin', null, true); } return; }
+    if (d.go === 'logout') { await api('/logout', { method: 'POST' }); me = null; unread = 0; history.replaceState(null, '', location.pathname); return go('home'); }
+    go(d.go);
+  } catch (err) { showErr(err); }
 });
-$('q').oninput = () => home();
-const start = () => (location.hash === '#owner' ? (isAdmin() ? adminPanel() : adminLogin()) : home());
+$('q').oninput = () => go('home', null, true);
+const start = () => go(location.hash === '#owner' ? (isAdmin() ? 'admin' : 'adminlogin') : 'home');
 window.addEventListener('hashchange', start);
-(async () => { try { me = await api('/me'); } catch {} nav(); start(); })();
+applyLang();
+(async () => { try { me = await api('/me'); } catch {} applyLang(); start(); checkUnread(); setInterval(checkUnread, 30000); })();
 </script>
 </body>
 </html>

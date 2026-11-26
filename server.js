@@ -45,6 +45,11 @@ const hide = (req, rows) => {
   return Array.isArray(rows) ? rows.map(f) : f(rows);
 };
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS convos(id INTEGER PRIMARY KEY, token TEXT UNIQUE, name TEXT, contact TEXT, at INTEGER, owner_read INTEGER DEFAULT 0, visitor_read INTEGER DEFAULT 0);
+  CREATE TABLE IF NOT EXISTS chat(id INTEGER PRIMARY KEY, convo_id INTEGER, sender TEXT, body TEXT, at INTEGER);
+`);
+
 const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '20kb' }));
@@ -87,12 +92,45 @@ const same = (a, b) => crypto.timingSafeEqual(crypto.createHash('sha256').update
 // ---------- Public ----------
 app.get('/api/me', (req, res) => res.json(req.user ? { role: req.user.role, name: req.user.name } : null));
 
-app.post('/api/contact', limit('contact', 5, 3600e3), (req, res) => {
+// ---------- Two-way chat ----------
+// A visitor's chat is found with a secret token kept in their browser; nobody else can read it.
+const convoOf = req => {
+  const t = String(req.headers['x-chat-token'] || '');
+  return t ? db.prepare('SELECT * FROM convos WHERE token = ?').get(t) : undefined;
+};
+const noChat = res => res.status(404).json({ error: 'Chat not found.' });
+
+app.post('/api/chat/start', limit('chat', 5, 3600e3), (req, res) => {
   const name = String(req.body.name || '').trim().slice(0, 80);
   const contact = String(req.body.contact || '').trim().slice(0, 120);
   const body = String(req.body.message || '').trim().slice(0, 1500);
-  if (!name || !contact || !body) return res.status(400).json({ error: 'Fill in your name, how to reach you, and a message.' });
-  db.prepare('INSERT INTO messages(name, contact, body, at) VALUES(?, ?, ?, ?)').run(name, contact, body, Date.now());
+  if (!name || !body) return res.status(400).json({ error: 'Fill in your name and a message.' });
+  const token = crypto.randomBytes(16).toString('hex'), now = Date.now();
+  const r = db.prepare('INSERT INTO convos(token, name, contact, at, visitor_read) VALUES(?, ?, ?, ?, ?)').run(token, name, contact, now, now);
+  db.prepare('INSERT INTO chat(convo_id, sender, body, at) VALUES(?, ?, ?, ?)').run(r.lastInsertRowid, 'visitor', body, now);
+  res.json({ token });
+});
+
+app.get('/api/chat', (req, res) => {
+  const c = convoOf(req);
+  if (!c) return noChat(res);
+  const messages = db.prepare('SELECT sender, body, at FROM chat WHERE convo_id = ? ORDER BY at, id').all(c.id);
+  if (req.query.read) db.prepare('UPDATE convos SET visitor_read = ? WHERE id = ?').run(Date.now(), c.id);
+  res.json({ name: c.name, messages });
+});
+
+app.get('/api/chat/unread', (req, res) => {
+  const c = convoOf(req);
+  if (!c) return noChat(res);
+  res.json({ n: db.prepare("SELECT COUNT(*) AS n FROM chat WHERE convo_id = ? AND sender = 'owner' AND at > ?").get(c.id, c.visitor_read).n });
+});
+
+app.post('/api/chat/send', limit('chatsend', 40, 3600e3), (req, res) => {
+  const c = convoOf(req);
+  if (!c) return noChat(res);
+  const body = String(req.body.body || '').trim().slice(0, 1500);
+  if (!body) return res.status(400).json({ error: 'Write something first.' });
+  db.prepare('INSERT INTO chat(convo_id, sender, body, at) VALUES(?, ?, ?, ?)').run(c.id, 'visitor', body, Date.now());
   res.json({ ok: true });
 });
 
@@ -211,8 +249,38 @@ app.post('/api/admin/codes', admin, (req, res) => {
 app.delete('/api/admin/codes/:id', admin, (req, res) => { db.prepare('DELETE FROM codes WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
 app.post('/api/admin/codes/:id/reset', admin, (req, res) => { db.prepare('UPDATE codes SET token = NULL, claimed_at = NULL WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
 
-app.get('/api/admin/messages', admin, (req, res) => res.json(db.prepare('SELECT * FROM messages ORDER BY at DESC LIMIT 200').all()));
-app.delete('/api/admin/messages/:id', admin, (req, res) => { db.prepare('DELETE FROM messages WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
+app.get('/api/admin/chats', admin, (req, res) => res.json(db.prepare(`
+  SELECT c.id, c.name, c.contact, c.at,
+    (SELECT body FROM chat WHERE convo_id = c.id ORDER BY at DESC, id DESC LIMIT 1) AS last_body,
+    (SELECT MAX(at) FROM chat WHERE convo_id = c.id) AS last_at,
+    (SELECT COUNT(*) FROM chat WHERE convo_id = c.id AND sender = 'visitor' AND at > c.owner_read) AS unread
+  FROM convos c ORDER BY last_at DESC LIMIT 200`).all()));
+
+app.get('/api/admin/unread', admin, (req, res) => res.json({ n: db.prepare(
+  "SELECT COUNT(*) AS n FROM chat ch JOIN convos c ON c.id = ch.convo_id WHERE ch.sender = 'visitor' AND ch.at > c.owner_read").get().n }));
+
+app.get('/api/admin/chats/:id', admin, (req, res) => {
+  const c = db.prepare('SELECT id, name, contact FROM convos WHERE id = ?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Not found.' });
+  const messages = db.prepare('SELECT sender, body, at FROM chat WHERE convo_id = ? ORDER BY at, id').all(c.id);
+  db.prepare('UPDATE convos SET owner_read = ? WHERE id = ?').run(Date.now(), c.id);
+  res.json({ ...c, messages });
+});
+
+app.post('/api/admin/chats/:id/reply', admin, (req, res) => {
+  const c = db.prepare('SELECT id FROM convos WHERE id = ?').get(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Not found.' });
+  const body = String(req.body.body || '').trim().slice(0, 1500);
+  if (!body) return res.status(400).json({ error: 'Write something first.' });
+  db.prepare('INSERT INTO chat(convo_id, sender, body, at) VALUES(?, ?, ?, ?)').run(c.id, 'owner', body, Date.now());
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/chats/:id', admin, (req, res) => {
+  db.prepare('DELETE FROM chat WHERE convo_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM convos WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.listen(PORT, () => console.log(`Reba running on port ${PORT}`));
