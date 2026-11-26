@@ -220,10 +220,33 @@ app.post(['/api/access-code', '/api/verify-code'], async (req, res) => {
   }
 });
 
-// List uploaded videos
+// Owner creates an access code in Postgres
+app.post('/api/access-codes', requireOwner, async (req, res) => {
+  const raw = String(req.body?.code || '').trim();
+  const code = raw || `REBA-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO access_codes (code)
+       VALUES ($1)
+       ON CONFLICT (code) DO UPDATE SET code = EXCLUDED.code
+       RETURNING id, code, used, created_at`,
+      [code]
+    );
+    return res.status(201).json({ ok: true, accessCode: rows[0] });
+  } catch (err) {
+    console.error('POST /api/access-codes error:', err);
+    return res.status(500).json({ error: 'Failed to create access code' });
+  }
+});
+
+// List uploaded videos (hides raw video file URL from unauthenticated visitors)
 app.get('/api/videos', async (req, res) => {
+  const user = getOptionalUser(req);
+  const unlocked = user?.role === 'owner' || user?.role === 'member';
   const sort = String(req.query?.sort || 'new').toLowerCase();
   const search = String(req.query?.q || '').trim().toLowerCase();
+
   let orderBy = 'id DESC';
   if (sort === 'views' || sort === 'most_viewed') {
     orderBy = 'views DESC, id DESC';
@@ -237,13 +260,25 @@ app.get('/api/videos', async (req, res) => {
        FROM videos
        ORDER BY ${orderBy}`
     );
-    const filtered = search
+
+    const filtered = (search
       ? rows.filter(
           (v) =>
             String(v.title || '').toLowerCase().includes(search) ||
             String(v.description || '').toLowerCase().includes(search)
         )
-      : rows;
+      : rows
+    ).map((v) => ({
+      id: v.id,
+      title: v.title,
+      description: v.description,
+      views: v.views,
+      likes: v.likes,
+      created_at: v.created_at,
+      locked: !unlocked,
+      url: unlocked ? v.url : null,
+    }));
+
     res.json(filtered);
   } catch (err) {
     console.error('GET /api/videos error:', err);
@@ -305,7 +340,7 @@ app.post('/api/chat', async (req, res) => {
   const sender =
     role === 'owner'
       ? 'Owner'
-      : String(req.body?.sender || 'Guest').trim().slice(0, 40) || 'Guest';
+      : String(req.body?.sender || 'Visitor').trim().slice(0, 40) || 'Visitor';
   const message = String(req.body?.message || req.body?.body || '').trim().slice(0, 1000);
 
   if (!message) {
@@ -322,7 +357,7 @@ app.post('/api/chat', async (req, res) => {
     return res.status(201).json({ ok: true, message: rows[0] });
   } catch (err) {
     console.error('POST /api/chat error:', err);
-    return res.status(500).json({ error: 'Failed to send chat message' });
+    res.status(500).json({ error: 'Failed to send chat message' });
   }
 });
 

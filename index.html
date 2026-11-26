@@ -45,6 +45,8 @@
       cursor: pointer;
       font-weight: 700;
       border: none;
+      text-decoration: none;
+      display: inline-block;
     }
     .btn-red {
       background: #dc2626;
@@ -85,17 +87,65 @@
       border-color: #dc2626;
     }
     .video-card {
+      position: relative;
       background: #111115;
       border: 1px solid #27272a;
       border-radius: 12px;
       padding: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .video-stage {
+      position: relative;
+      margin-top: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #050507;
+      border: 1px solid #232329;
+      min-height: 170px;
     }
     video {
       width: 100%;
-      border-radius: 10px;
+      display: block;
       background: #000;
-      margin-top: 8px;
+    }
+    .locked-preview {
+      padding: 20px 14px;
+      text-align: center;
+      background: repeating-linear-gradient(
+        -45deg,
+        #0d0d11,
+        #0d0d11 10px,
+        #14141b 10px,
+        #14141b 20px
+      );
+    }
+    .lock-layer {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .lock-badge {
+      background: rgba(220, 38, 38, 0.16);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+    .contact-link {
+      color: #f87171;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
     }
     .chat-box {
       max-height: 260px;
@@ -139,6 +189,24 @@
     .ok-msg {
       color: #86efac;
     }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal-card {
+      width: 100%;
+      max-width: 460px;
+      background: #111115;
+      border: 1px solid #2e2e36;
+      border-radius: 14px;
+      padding: 16px;
+    }
   </style>
 </head>
 <body>
@@ -148,28 +216,39 @@
       <input type="search" id="search-input" placeholder="Search videos" />
     </div>
 
-    <div class="panel stack">
+    <!-- Visitor Access Bar -->
+    <div class="panel stack" id="visitor-bar">
       <div class="row">
-        <button class="btn btn-red" id="open-owner-btn" type="button">OWNER LOGIN / UPLOAD</button>
-        <button class="btn btn-dark" id="open-code-btn" type="button">ENTER ACCESS CODE</button>
-        <button class="btn btn-dark" id="toggle-chat-btn" type="button">IN-APP CHAT</button>
+        <button class="btn btn-red" id="visitor-code-btn" type="button">ENTER ACCESS CODE</button>
+        <button class="btn btn-dark" id="visitor-contact-btn" type="button">REQUEST ACCESS CODE</button>
+        <button class="btn btn-dark" id="visitor-chat-btn" type="button">CHAT</button>
       </div>
-      <div id="owner-status-bar" class="muted">Status: Guest view (log in as owner to upload videos)</div>
+      <div id="access-status-bar" class="muted">Enter an access code to watch videos.</div>
     </div>
 
-    <!-- Owner Login Box -->
-    <div class="panel stack" id="owner-login-panel">
-      <strong>OWNER LOGIN</strong>
-      <input type="password" id="owner-password-input" placeholder="Enter OWNER PASSWORD" autocomplete="current-password" />
+    <!-- Visitor Access Code Box -->
+    <div class="panel stack hidden" id="code-panel">
+      <strong>ACCESS CODE</strong>
+      <input type="text" id="access-code-input" placeholder="Enter access code" />
       <div class="row">
-        <button class="btn btn-red" id="owner-login-submit" type="button">LOG IN</button>
-        <button class="btn btn-dark" id="owner-logout-btn" type="button">LOG OUT</button>
+        <button class="btn btn-red" id="access-code-submit" type="button">UNLOCK VIDEOS</button>
+        <button class="btn btn-dark" id="open-contact-from-code" type="button">REQUEST CODE</button>
       </div>
-      <div id="owner-login-msg" class="status-msg"></div>
+      <div id="access-code-msg" class="status-msg"></div>
     </div>
 
-    <!-- Upload Video Box (Always visible in UI so you can find it immediately, requires Owner login to post) -->
-    <div class="panel stack" id="upload-panel">
+    <!-- Private Management Panel (Only shown when ?studio=1 is in URL or already authenticated) -->
+    <div class="panel stack hidden" id="studio-section">
+      <strong>STUDIO</strong>
+      <input type="password" id="studio-pass-input" placeholder="Passkey" autocomplete="current-password" />
+      <div class="row">
+        <button class="btn btn-red" id="studio-login-submit" type="button">SIGN IN</button>
+        <button class="btn btn-dark" id="studio-logout-btn" type="button">SIGN OUT</button>
+      </div>
+      <div id="studio-login-msg" class="status-msg"></div>
+
+      <hr style="border: 0; border-top: 1px solid #27272a; width: 100%;" />
+
       <strong>UPLOAD VIDEO</strong>
       <form id="upload-form" class="stack" enctype="multipart/form-data">
         <input type="text" id="upload-title" name="title" placeholder="Video title" required />
@@ -178,33 +257,15 @@
         <button class="btn btn-red" type="submit">UPLOAD VIDEO</button>
       </form>
       <div id="upload-msg" class="status-msg"></div>
-    </div>
 
-    <!-- Access Code Box -->
-    <div class="panel stack hidden" id="code-panel">
-      <strong>ACCESS CODE</strong>
-      <input type="text" id="access-code-input" placeholder="Enter access code" />
-      <button class="btn btn-red" id="access-code-submit" type="button">UNLOCK</button>
-      <div id="access-code-msg" class="status-msg"></div>
-    </div>
+      <hr style="border: 0; border-top: 1px solid #27272a; width: 100%;" />
 
-    <!-- In-App Chat -->
-    <div class="panel stack" id="chat-panel">
-      <div class="row" style="justify-content: space-between;">
-        <strong>IN-APP CHAT</strong>
-        <span class="muted" id="chat-sync-label">Live sync</span>
+      <strong>ACCESS CODES</strong>
+      <div class="row">
+        <input type="text" id="new-code-input" placeholder="Custom code or blank for auto" style="flex: 1;" />
+        <button class="btn btn-dark" id="create-code-btn" type="button">CREATE CODE</button>
       </div>
-      <div class="chat-box" id="chat-messages">
-        <div class="muted">Loading messages...</div>
-      </div>
-      <form id="chat-form" class="stack">
-        <input type="text" id="chat-sender" placeholder="Your name (optional)" />
-        <div class="row">
-          <input type="text" id="chat-input" placeholder="Type a message..." style="flex: 1;" required />
-          <button class="btn btn-red" type="submit">SEND</button>
-        </div>
-      </form>
-      <div id="chat-msg" class="status-msg"></div>
+      <div id="created-code-msg" class="status-msg ok-msg"></div>
     </div>
 
     <!-- Video Feed -->
@@ -217,10 +278,52 @@
     <div id="videos-list">
       <div class="muted">Loading videos...</div>
     </div>
+
+    <!-- In-App Chat -->
+    <div class="panel stack" id="chat-panel">
+      <div class="row" style="justify-content: space-between;">
+        <strong>CHAT</strong>
+        <span class="muted" id="chat-sync-label">Live</span>
+      </div>
+      <div class="chat-box" id="chat-messages">
+        <div class="muted">Loading messages...</div>
+      </div>
+      <form id="chat-form" class="stack">
+        <input type="text" id="chat-sender" placeholder="Your name (optional)" />
+        <div class="row">
+          <input type="text" id="chat-input" placeholder="Ask for an access code..." style="flex: 1;" required />
+          <button class="btn btn-red" type="submit">SEND</button>
+        </div>
+      </form>
+      <div id="chat-msg" class="status-msg"></div>
+    </div>
+  </div>
+
+  <!-- Layered Contact / Request Access Code Modal -->
+  <div class="modal-backdrop hidden" id="contact-modal" role="dialog" aria-modal="true">
+    <div class="modal-card stack">
+      <div class="row" style="justify-content: space-between;">
+        <strong>REQUEST ACCESS CODE</strong>
+        <button class="btn btn-dark" id="close-contact-modal" type="button">CLOSE</button>
+      </div>
+      <p class="muted" style="margin: 0;">
+        Send a message in chat to ask for an access code.
+      </p>
+      <div class="row">
+        <button class="btn btn-red" id="jump-to-chat-btn" type="button">GO TO CHAT</button>
+        <button class="btn btn-dark" id="open-code-from-modal" type="button">ENTER CODE</button>
+      </div>
+      <form id="quick-request-form" class="stack">
+        <input type="text" id="req-name" placeholder="Your name (optional)" />
+        <input type="text" id="req-note" placeholder="Hey, can I get an access code?" required />
+        <button class="btn btn-red" type="submit">SEND REQUEST</button>
+      </form>
+      <div id="quick-req-status" class="status-msg"></div>
+    </div>
   </div>
 
   <script>
-    const TOKEN_KEY = 'reba_owner_token';
+    const TOKEN_KEY = 'reba_access_token';
     let currentSort = 'new';
 
     function getToken() {
@@ -230,23 +333,129 @@
     function setToken(token) {
       if (token) localStorage.setItem(TOKEN_KEY, token);
       else localStorage.removeItem(TOKEN_KEY);
-      updateAuthUI();
+      updateViewState();
+      loadVideos();
     }
 
-    function updateAuthUI() {
-      const hasOwner = Boolean(getToken());
-      const bar = document.getElementById('owner-status-bar');
-      bar.textContent = hasOwner
-        ? 'Status: Logged in as OWNER — video upload unlocked'
-        : 'Status: Guest view — log in as OWNER above before uploading';
+    function parseRole(token) {
+      if (!token) return null;
+      try {
+        const part = token.split('.')[1];
+        const json = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')));
+        return json.role || null;
+      } catch (e) {
+        return null;
+      }
     }
 
-    async function doOwnerLogin() {
-      const msgEl = document.getElementById('owner-login-msg');
-      const pw = document.getElementById('owner-password-input').value;
-      msgEl.textContent = 'Logging in...';
+    function hasStudioParam() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('studio') === '1' || params.get('owner') === '1';
+    }
+
+    function updateViewState() {
+      const token = getToken();
+      const role = parseRole(token);
+      const isOwner = role === 'owner';
+      const isUnlocked = isOwner || role === 'member';
+
+      const studioSection = document.getElementById('studio-section');
+      if (isOwner || hasStudioParam()) {
+        studioSection.classList.remove('hidden');
+      } else {
+        studioSection.classList.add('hidden');
+      }
+
+      const statusBar = document.getElementById('access-status-bar');
+      if (isOwner) {
+        statusBar.textContent = 'Access unlocked.';
+      } else if (isUnlocked) {
+        statusBar.textContent = 'Access code active — videos unlocked.';
+      } else {
+        statusBar.textContent = 'Videos require an access code. Tap a video to request one.';
+      }
+    }
+
+    function openContactModal(videoTitle = '') {
+      const modal = document.getElementById('contact-modal');
+      const noteInput = document.getElementById('req-note');
+      if (videoTitle && !noteInput.value) {
+        noteInput.value = `Requesting access code for "${videoTitle}"`;
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeContactModal() {
+      document.getElementById('contact-modal').classList.add('hidden');
+    }
+
+    document.getElementById('visitor-code-btn').addEventListener('click', () => {
+      document.getElementById('code-panel').classList.toggle('hidden');
+    });
+
+    document.getElementById('visitor-contact-btn').addEventListener('click', () => openContactModal());
+    document.getElementById('open-contact-from-code').addEventListener('click', () => openContactModal());
+    document.getElementById('close-contact-modal').addEventListener('click', closeContactModal);
+
+    document.getElementById('open-code-from-modal').addEventListener('click', () => {
+      closeContactModal();
+      const cp = document.getElementById('code-panel');
+      cp.classList.remove('hidden');
+      cp.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('jump-to-chat-btn').addEventListener('click', () => {
+      closeContactModal();
+      document.getElementById('chat-panel').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('visitor-chat-btn').addEventListener('click', () => {
+      document.getElementById('chat-panel').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    async function sendChatMessage(sender, message) {
+      const token = getToken();
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ sender, message }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not send message.');
+      await loadChat();
+      return data;
+    }
+
+    document.getElementById('quick-request-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('quick-req-status');
+      const name = document.getElementById('req-name').value.trim() || 'Visitor';
+      const note = document.getElementById('req-note').value.trim();
+      if (!note) return;
+      statusEl.textContent = 'Sending...';
+      statusEl.className = 'status-msg';
+      try {
+        await sendChatMessage(name, note);
+        statusEl.textContent = 'Sent!';
+        statusEl.className = 'status-msg ok-msg';
+        document.getElementById('req-note').value = '';
+        setTimeout(() => {
+          closeContactModal();
+          document.getElementById('chat-panel').scrollIntoView({ behavior: 'smooth' });
+        }, 400);
+      } catch (err) {
+        statusEl.textContent = err.message;
+      }
+    });
+
+    document.getElementById('studio-login-submit').addEventListener('click', async () => {
+      const msgEl = document.getElementById('studio-login-msg');
+      const pw = document.getElementById('studio-pass-input').value;
+      msgEl.textContent = 'Signing in...';
       msgEl.className = 'status-msg';
-
       try {
         const res = await fetch('/api/owner/login', {
           method: 'POST',
@@ -255,33 +464,46 @@
         });
         const data = await res.json();
         if (!res.ok || !data.token) {
-          msgEl.textContent = data.error || 'Login failed.';
+          msgEl.textContent = data.error || 'Sign in failed.';
           return;
         }
         setToken(data.token);
-        msgEl.textContent = 'Owner logged in.';
+        msgEl.textContent = 'Signed in.';
         msgEl.className = 'status-msg ok-msg';
       } catch (err) {
-        msgEl.textContent = 'Connection error while logging in.';
+        msgEl.textContent = 'Connection error.';
       }
-    }
+    });
 
-    document.getElementById('owner-login-submit').addEventListener('click', doOwnerLogin);
-    document.getElementById('owner-logout-btn').addEventListener('click', () => {
+    document.getElementById('studio-logout-btn').addEventListener('click', () => {
       setToken('');
-      document.getElementById('owner-login-msg').textContent = 'Logged out.';
+      document.getElementById('studio-login-msg').textContent = 'Signed out.';
     });
 
-    document.getElementById('open-owner-btn').addEventListener('click', () => {
-      document.getElementById('owner-login-panel').scrollIntoView({ behavior: 'smooth' });
-    });
-
-    document.getElementById('open-code-btn').addEventListener('click', () => {
-      document.getElementById('code-panel').classList.toggle('hidden');
-    });
-
-    document.getElementById('toggle-chat-btn').addEventListener('click', () => {
-      document.getElementById('chat-panel').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('create-code-btn').addEventListener('click', async () => {
+      const code = document.getElementById('new-code-input').value.trim();
+      const msgEl = document.getElementById('created-code-msg');
+      const token = getToken();
+      msgEl.textContent = '';
+      try {
+        const res = await fetch('/api/access-codes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ code }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          msgEl.textContent = data.error || 'Could not create code.';
+          return;
+        }
+        msgEl.textContent = `Code: ${data.accessCode.code}`;
+        document.getElementById('new-code-input').value = '';
+      } catch (e) {
+        msgEl.textContent = 'Error creating code.';
+      }
     });
 
     document.getElementById('access-code-submit').addEventListener('click', async () => {
@@ -295,8 +517,13 @@
           body: JSON.stringify({ code }),
         });
         const data = await res.json();
-        msgEl.textContent = data.ok ? 'Access code verified!' : (data.error || 'Invalid code');
-        if (data.ok) msgEl.className = 'status-msg ok-msg';
+        if (!res.ok || !data.token) {
+          msgEl.textContent = data.error || 'Invalid access code.';
+          return;
+        }
+        setToken(data.token);
+        msgEl.textContent = 'Unlocked!';
+        msgEl.className = 'status-msg ok-msg';
       } catch (e) {
         msgEl.textContent = 'Error checking access code.';
       }
@@ -311,9 +538,8 @@
       const descInput = document.getElementById('upload-desc');
 
       msgEl.className = 'status-msg';
-
       if (!token) {
-        msgEl.textContent = 'Log in with OWNER PASSWORD first.';
+        msgEl.textContent = 'Sign in first.';
         return;
       }
       if (!fileInput.files.length) {
@@ -326,7 +552,7 @@
       fd.append('description', descInput.value.trim());
       fd.append('video', fileInput.files[0]);
 
-      msgEl.textContent = 'Uploading video...';
+      msgEl.textContent = 'Uploading...';
       try {
         const res = await fetch('/api/videos', {
           method: 'POST',
@@ -343,27 +569,58 @@
         e.target.reset();
         loadVideos();
       } catch (err) {
-        msgEl.textContent = 'Upload failed due to network error.';
+        msgEl.textContent = 'Upload failed.';
       }
     });
 
     async function loadVideos() {
       const listEl = document.getElementById('videos-list');
       const q = encodeURIComponent(document.getElementById('search-input').value.trim());
+      const token = getToken();
       try {
-        const res = await fetch(`/api/videos?sort=${encodeURIComponent(currentSort)}&q=${q}`);
+        const res = await fetch(`/api/videos?sort=${encodeURIComponent(currentSort)}&q=${q}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const videos = await res.json();
         if (!Array.isArray(videos) || videos.length === 0) {
           listEl.innerHTML = '<div class="muted">No videos yet.</div>';
           return;
         }
-        listEl.innerHTML = videos.map((v) => `
-          <div class="video-card">
-            <strong>${escapeHtml(v.title)}</strong>
-            ${v.description ? `<div class="muted">${escapeHtml(v.description)}</div>` : ''}
-            <video controls preload="metadata" src="${escapeHtml(v.url)}"></video>
-          </div>
-        `).join('');
+        listEl.innerHTML = videos.map((v) => {
+          const isLocked = Boolean(v.locked) || !v.url;
+          if (isLocked) {
+            return `
+              <div class="video-card">
+                <strong>${escapeHtml(v.title)}</strong>
+                ${v.description ? `<div class="muted">${escapeHtml(v.description)}</div>` : ''}
+                <div class="video-stage locked-preview" data-locked-title="${escapeHtml(v.title)}">
+                  <div class="lock-layer">
+                    <span class="lock-badge">ACCESS CODE REQUIRED</span>
+                    <div class="muted">Locked video</div>
+                    <button type="button" class="contact-link request-code-trigger" data-title="${escapeHtml(v.title)}">
+                      Message to request an access code
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div class="video-card">
+              <strong>${escapeHtml(v.title)}</strong>
+              ${v.description ? `<div class="muted">${escapeHtml(v.description)}</div>` : ''}
+              <div class="video-stage">
+                <video controls preload="metadata" src="${escapeHtml(v.url)}"></video>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('.locked-preview').forEach((stage) => {
+          stage.addEventListener('click', () => {
+            openContactModal(stage.dataset.lockedTitle || '');
+          });
+        });
       } catch (e) {
         listEl.innerHTML = '<div class="muted">Could not load videos.</div>';
       }
@@ -375,7 +632,7 @@
         const res = await fetch('/api/chat');
         const msgs = await res.json();
         if (!Array.isArray(msgs) || msgs.length === 0) {
-          box.innerHTML = '<div class="muted">No chat messages yet. Start the conversation below.</div>';
+          box.innerHTML = '<div class="muted">No messages yet.</div>';
           return;
         }
         box.innerHTML = msgs.map((m) => `
@@ -396,31 +653,17 @@
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const msgEl = document.getElementById('chat-msg');
-      const sender = document.getElementById('chat-sender').value.trim() || 'Guest';
+      const sender = document.getElementById('chat-sender').value.trim() || 'Visitor';
       const input = document.getElementById('chat-input');
       const message = input.value.trim();
       msgEl.textContent = '';
       if (!message) return;
 
-      const token = getToken();
       try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ sender, message }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          msgEl.textContent = data.error || 'Could not send message.';
-          return;
-        }
+        await sendChatMessage(sender, message);
         input.value = '';
-        loadChat();
       } catch (err) {
-        msgEl.textContent = 'Network error sending message.';
+        msgEl.textContent = err.message;
       }
     });
 
@@ -445,7 +688,7 @@
         .replace(/"/g, '&quot;');
     }
 
-    updateAuthUI();
+    updateViewState();
     loadVideos();
     loadChat();
     setInterval(loadChat, 4000);
