@@ -1,0 +1,50 @@
+<!-- Paste inside your owner dashboard / panel in index.html once logged in -->
+<div id="owner-upload-box" style="margin-top: 16px; padding: 14px; border: 1px solid #444; border-radius: 10px;">
+  <h3>Upload Video (Owner)</h3>
+  <form id="owner-upload-form" enctype="multipart/form-data">
+    <input type="text" id="video-title" name="title" placeholder="Video title" required />
+    <input type="text" id="video-desc" name="description" placeholder="Description (optional)" />
+    <input type="file" id="video-file" name="video" accept="video/*" required />
+    <button type="submit">Upload Video</button>
+  </form>
+  <p id="upload-status"></p>
+</div>
+
+<script>
+document.getElementById('owner-upload-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const statusEl = document.getElementById('upload-status');
+  const fileInput = document.getElementById('video-file');
+  const titleInput = document.getElementById('video-title');
+  const descInput = document.getElementById('video-desc');
+  const token = localStorage.getItem('ownerToken') || localStorage.getItem('token') || '';
+
+  if (!fileInput.files.length) {
+    statusEl.textContent = 'Select a video file first.';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('title', titleInput.value);
+  formData.append('description', descInput.value);
+  formData.append('video', fileInput.files[0]);
+
+  statusEl.textContent = 'Uploading...';
+  try {
+    const res = await fetch('/api/videos', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      statusEl.textContent = data.error || 'Upload failed.';
+      return;
+    }
+    statusEl.textContent = 'Uploaded: ' + data.video.title;
+    e.target.reset();
+  } catch (err) {
+    statusEl.textContent = 'Network/upload error.';
+  }
+});
+</script>

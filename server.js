@@ -1,10 +1,17 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 if (!process.env.DATABASE_URL) {
   console.error('Missing DATABASE_URL environment variable.');
@@ -21,6 +28,61 @@ const pool = new Pool({
 pool.on('error', (err) => {
   console.error('Unexpected Postgres pool error:', err);
 });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '') || '.mp4';
+    const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    cb(null, safeName);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 500 * 1024 * 1024 },
+});
+
+function getOwnerPassword() {
+  return (
+    process.env.ADMIN_PASSWORD ||
+    process.env.OWNER_PASSWORD ||
+    process.env.ADMIN_CODE ||
+    ''
+  );
+}
+
+function getJwtSecret() {
+  return process.env.JWT_SECRET || process.env.JWT_KEY || '';
+}
+
+function requireOwner(req, res, next) {
+  const secret = getJwtSecret();
+  const authHeader = req.headers.authorization || '';
+  const tokenFromHeader = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7).trim()
+    : '';
+  const token = tokenFromHeader || req.headers['x-auth-token'] || req.body?.token || '';
+
+  if (!secret) {
+    return res.status(500).json({ error: 'Server auth secret missing' });
+  }
+
+  if (!token) {
+    return res.status(401).json({ error: 'Owner authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, secret);
+    if (decoded.role !== 'owner') {
+      return res.status(403).json({ error: 'Owner role required' });
+    }
+    req.user = decoded;
+    return next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}
 
 async function initDb() {
   await pool.query(`
@@ -49,23 +111,24 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `);
-}
 
-function getOwnerPassword() {
-  return (
-    process.env.ADMIN_PASSWORD ||
-    process.env.OWNER_PASSWORD ||
-    process.env.ADMIN_CODE ||
-    ''
-  );
-}
-
-function getJwtSecret() {
-  return process.env.JWT_SECRET || process.env.JWT_KEY || '';
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS videos (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      filename TEXT NOT NULL,
+      url TEXT NOT NULL,
+      views INTEGER DEFAULT 0,
+      likes INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
 }
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(UPLOAD_DIR));
 app.use(express.static('.'));
 
 app.get('/health', async (req, res) => {
@@ -130,6 +193,61 @@ app.post(['/api/access-code', '/api/verify-code'], async (req, res) => {
     return res.status(500).json({ error: 'Failed to verify access code' });
   }
 });
+
+// List uploaded videos
+app.get('/api/videos', async (req, res) => {
+  const sort = String(req.query?.sort || 'new').toLowerCase();
+  let orderBy = 'id DESC';
+  if (sort === 'views' || sort === 'most_viewed') {
+    orderBy = 'views DESC, id DESC';
+  } else if (sort === 'likes' || sort === 'most_liked') {
+    orderBy = 'likes DESC, id DESC';
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, title, description, filename, url, views, likes, created_at
+       FROM videos
+       ORDER BY ${orderBy}`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /api/videos error:', err);
+    res.status(500).json({ error: 'Failed to load videos' });
+  }
+});
+
+// Upload a video (Owner only)
+app.post(
+  ['/api/videos', '/api/upload', '/api/owner/upload'],
+  requireOwner,
+  upload.single('video'),
+  async (req, res) => {
+    const file = req.file;
+    const title =
+      String(req.body?.title || file?.originalname || 'Untitled Video').trim();
+    const description = String(req.body?.description || '').trim();
+
+    if (!file) {
+      return res.status(400).json({ error: 'No video file uploaded (field name: video)' });
+    }
+
+    const fileUrl = `/uploads/${file.filename}`;
+
+    try {
+      const { rows } = await pool.query(
+        `INSERT INTO videos (title, description, filename, url)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, title, description, filename, url, views, likes, created_at`,
+        [title, description, file.filename, fileUrl]
+      );
+      return res.status(201).json({ ok: true, video: rows[0] });
+    } catch (err) {
+      console.error('POST /api/videos error:', err);
+      return res.status(500).json({ error: 'Failed to save video record' });
+    }
+  }
+);
 
 app.get('/api/comments', async (req, res) => {
   try {
