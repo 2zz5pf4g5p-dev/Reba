@@ -3,62 +3,111 @@
 <head>
 <meta charset="utf-8">
 <title>Reba</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1b7f4b">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f7f3;--surface:#fff;--ink:#17201a;--mute:#5f6b63;--line:#dfe4dc;--brand:#1b7f4b;--on:#fff;--like:#c8312f}
-@media (prefers-color-scheme:dark){:root{--bg:#121a15;--surface:#1b2620;--ink:#eef3ee;--mute:#9aa89e;--line:#2c3a31;--brand:#3fbf7f;--on:#08150d;--like:#ff6b68}}
+:root{--bg:#0a0a0a;--surface:#161616;--field:#101010;--line:#2b2b2b;--ink:#fff;--mute:#a6a6a6;--red:#e11d2e;--red-hi:#ff3b4a;
+--display:"Bebas Neue",Impact,"Arial Narrow",sans-serif;--body:"DM Sans","Segoe UI",system-ui,sans-serif;--serif:"Playfair Display",Georgia,serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 button,input,textarea{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px}
-.top{display:flex;gap:8px;align-items:center}
-.logo{font-weight:800;font-size:22px;color:var(--brand);background:none;border:0;cursor:pointer;padding:0;white-space:nowrap}
-.search{flex:1;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.btn{padding:8px 14px;border:0;border-radius:999px;background:var(--brand);color:var(--on);font-weight:700;cursor:pointer;white-space:nowrap}
-.btn.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
-.btn.on{background:var(--like);color:#fff}
-.btn.sm{padding:4px 10px;font-size:13px}
-.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer}
-:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
-main{max-width:1100px;margin:0 auto;padding:16px 14px 30px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px 14px}
-.card{background:none;border:0;padding:0;text-align:left;cursor:pointer;width:100%}
-.card video,.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:34px;pointer-events:none}
-.card h3{margin:8px 0 2px;font-size:15px}
+:focus-visible{outline:3px solid var(--red-hi);outline-offset:2px}
+
+/* Top: centered brand + search */
+header{position:sticky;top:0;z-index:5;text-align:center;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:rgba(10,10,10,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.logo{background:none;border:0;cursor:pointer;font:400 38px/1 var(--display);letter-spacing:3px;color:var(--ink);padding:0}
+.logo i{color:var(--red);font-style:normal}
+.tag{font:italic 600 13px var(--serif);color:var(--mute);margin:2px 0 10px}
+.search{width:100%;max-width:520px;padding:10px 18px;border:1px solid var(--line);border-radius:999px;background:var(--field);text-align:center}
+.search:focus{border-color:var(--red);text-align:left}
+
+main{max-width:1100px;margin:0 auto;padding:18px 16px}
+
+/* Buttons */
+.btn{padding:11px 20px;border:2px solid var(--red);border-radius:999px;background:var(--red);color:#fff;font-weight:700;letter-spacing:.3px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--red-hi);border-color:var(--red-hi)}
+.btn.white{background:#fff;border-color:#fff;color:#0a0a0a}
+.btn.ghost{background:transparent;border-color:#fff;color:#fff}
+.btn.on{background:var(--red);border-color:var(--red);color:#fff}
+.btn.sm{padding:5px 12px;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+
+/* Big intro */
+.hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:26px;padding:34px 22px 26px;margin-bottom:22px;
+background:radial-gradient(120% 90% at 85% 0%,rgba(225,29,46,.45),transparent 62%),radial-gradient(80% 60% at 0% 100%,rgba(225,29,46,.18),transparent 70%),#0d0d0d}
+.kicker{display:inline-flex;gap:8px;align-items:center;font:700 12px var(--body);letter-spacing:2.5px;color:#fff;border:1px solid #fff;border-radius:999px;padding:5px 12px}
+.kicker::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--red-hi)}
+.hero h1{font:400 clamp(60px,18vw,132px)/.88 var(--display);letter-spacing:1px;margin:16px 0 10px}
+.hero h1 span{color:var(--red-hi)}
+.hero .quote{font:italic 600 clamp(18px,4.6vw,26px)/1.25 var(--serif);margin:0 0 8px}
+.lead{color:var(--mute);max-width:520px;margin:0}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 26px}
+.steps div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;font-size:14px}
+.steps b{display:block;font:400 34px/1 var(--display);color:var(--red-hi)}
+.sec{font:400 30px/1 var(--display);letter-spacing:1.5px;margin:6px 0 16px;display:flex;align-items:center;gap:12px}
+.sec::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--red),transparent)}
+
+/* Video cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px 16px}
+.card{background:none;border:0;padding:0;text-align:left;cursor:pointer;width:100%;transition:transform .15s}
+.card:hover{transform:translateY(-3px)}
+.card video,.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;pointer-events:none;border:1px solid var(--line)}
+.thumb{font-size:38px;background:linear-gradient(135deg,#2a0b0f,#0d0d0d 70%)}
+.card h3{margin:10px 0 2px;font:700 16px/1.3 var(--body)}
 .meta{color:var(--mute);font-size:13px}
-.banner{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
 .empty{text-align:center;padding:50px 16px;color:var(--mute)}
-.watch{display:grid;gap:16px}
-@media(min-width:900px){.watch{grid-template-columns:1fr 320px}}
-.watch>section>video{width:100%;max-height:70vh;background:#000;border-radius:12px;display:block}
-h1{font-size:20px;margin:12px 0 4px}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.desc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap}
+.empty h2{font:400 38px var(--display);color:#fff;margin:0}
+
+/* Watch page */
+.watch{display:grid;gap:18px}
+@media(min-width:900px){.watch{grid-template-columns:1fr 330px}}
+.watch>section>video{width:100%;max-height:70vh;background:#000;border-radius:18px;display:block;border:1px solid var(--line)}
+.watch h1{font:400 36px/1.05 var(--display);letter-spacing:1px;margin:14px 0 4px}
+.desc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;white-space:pre-wrap}
+.watch h2{font:400 26px var(--display);letter-spacing:1px}
 .cm{display:flex;gap:8px;margin:10px 0}
-input[type=text],input[type=password],textarea{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.c{padding:8px 0;border-bottom:1px solid var(--line)}
-.box{display:grid;gap:10px;max-width:440px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
-.err{color:var(--like);min-height:1.3em;font-size:14px}
-.ok{color:var(--brand);font-weight:700}
-.side .card{margin-bottom:12px}
-code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:15px}
-footer{text-align:center;padding:10px 0 24px}
+.c{padding:10px 0;border-bottom:1px solid var(--line)}
+.side .card{margin-bottom:14px}
+
+/* Forms */
+.box{display:grid;gap:12px;max-width:460px;margin:10px auto;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px}
+.box h2,h2.t{font:400 34px/1 var(--display);letter-spacing:1px;margin:0}
+input[type=text],input[type=password],textarea{flex:1;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field)}
+input[type=text]:focus,input[type=password]:focus,textarea:focus{border-color:var(--red)}
+input[type=file]{padding:10px;border:1px dashed #555;border-radius:12px;background:var(--field)}
+.real{color:var(--red-hi);font-size:12px;font-weight:700}
+.err{color:var(--red-hi);min-height:1.3em;font-size:14px}
+.ok{color:#fff;font:400 30px var(--display)}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer}
+code{background:#000;border:1px solid var(--line);padding:2px 8px;border-radius:8px;font-size:15px;letter-spacing:1px}
+h3.t{font:400 28px var(--display);letter-spacing:1px;margin:22px 0 8px}
+
+/* Bottom buttons */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:8;display:flex;justify-content:space-around;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(10,10,10,.94);backdrop-filter:blur(12px);border-top:2px solid var(--red)}
+.tab{flex:1;max-width:130px;background:none;border:0;border-radius:14px;padding:6px 4px;color:var(--mute);font:700 11px var(--body);letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.tab span{display:block;font-size:22px;line-height:1.2;margin-bottom:2px}
+.tab.on{color:#fff;background:var(--red)}
 </style>
 </head>
 <body>
 <header>
-  <div class="top"><button class="logo" data-go="home">▶ Reba</button><input class="search" id="q" type="search" placeholder="Search videos" aria-label="Search videos"></div>
-  <nav id="nav"></nav>
+  <button class="logo" data-go="home"><i>▶</i> REBA</button>
+  <div class="tag">Private video library</div>
+  <input class="search" id="q" type="search" placeholder="Search videos" aria-label="Search videos">
 </header>
 <main id="app"></main>
+<nav class="tabbar" id="nav"></nav>
 <script>
 const $ = id => document.getElementById(id), app = $('app');
-let me = null;
+let me = null, active = 'home';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ago = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.floor(m / 60) + ' h ago' : Math.floor(m / 1440) + ' d ago'; };
 const isAdmin = () => me && me.role === 'admin';
+const who = o => esc(o.author) + (o.real_name ? ` <span class="real">(${esc(o.real_name)})</span>` : '');
 
 async function api(path, opts = {}) {
   const headers = {};
@@ -69,39 +118,48 @@ async function api(path, opts = {}) {
   return d;
 }
 
+const tab = (go, icon, label) => `<button class="tab ${active === go ? 'on' : ''}" data-go="${go}"><span>${icon}</span>${label}</button>`;
 function nav() {
   $('nav').innerHTML = isAdmin()
-    ? '<span class="btn ghost" style="cursor:default">👑 Owner mode</span><button class="btn" data-go="admin">Owner panel</button><button class="btn ghost" data-go="upload">Upload</button><button class="btn ghost" data-go="logout">Log out</button>'
+    ? tab('home', '🏠', 'Home') + tab('upload', '⬆️', 'Upload') + tab('admin', '👑', 'Panel') + tab('logout', '🚪', 'Log out')
     : me
-      ? '<button class="btn" data-go="upload">Upload</button><button class="btn ghost" data-go="contact">Contact owner</button><button class="btn ghost" data-go="logout">Log out</button>'
-      : '<button class="btn" data-go="unlock">Unlock videos</button><button class="btn ghost" data-go="contact">Contact owner</button>';
+      ? tab('home', '🏠', 'Home') + tab('upload', '⬆️', 'Upload') + tab('contact', '✉️', 'Contact') + tab('logout', '🚪', 'Log out')
+      : tab('home', '🏠', 'Home') + tab('unlock', '🔓', 'Unlock') + tab('contact', '✉️', 'Contact');
 }
+const setActive = a => { active = a; nav(); };
 
 const card = v => `<button class="card" data-id="${v.id}">${me
   ? `<video src="/stream/${v.id}#t=1" preload="metadata" muted playsinline></video>`
-  : '<div class="thumb">🔒</div>'}<h3>${esc(v.title)}</h3><div class="meta">${esc(v.author)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div></button>`;
+  : '<div class="thumb">🔒</div>'}<h3>${esc(v.title)}</h3><div class="meta">${who(v)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div></button>`;
+
+function hero() {
+  if (isAdmin()) return `<section class="hero"><span class="kicker">OWNER MODE</span><h1>YOUR<br><span>LIBRARY.</span></h1><p class="lead">Delete videos, create access codes, and read messages from the owner panel.</p><div class="row"><button class="btn" data-go="admin">Open panel</button><button class="btn white" data-go="upload">Upload a video</button></div></section>`;
+  if (me) return `<section class="hero"><span class="kicker">MEMBER</span><h1>WELCOME,<br><span>${esc(me.name.toUpperCase())}.</span></h1><p class="lead">You’re anonymous here: everyone sees you as <b>${esc(me.name)}</b>, and only the owner knows who you are. Only the owner can delete videos.</p><div class="row"><button class="btn" data-go="upload">Upload a video</button></div></section>`;
+  return `<section class="hero"><span class="kicker">INVITE ONLY</span><h1>WATCH<br>WHAT’S<br><span>PRIVATE.</span></h1><p class="quote">Not everything belongs to everyone.</p><p class="lead">Reba is a private video library. Ask the owner for a code, unlock the videos, and watch.</p><div class="row"><button class="btn" data-go="unlock">I have a code</button><button class="btn white" data-go="contact">Ask for access</button></div></section>
+  <div class="steps"><div><b>1</b>Ask the owner</div><div><b>2</b>Get your code</div><div><b>3</b>Watch &amp; share</div></div>`;
+}
 
 async function home() {
-  const list = await api('/videos?q=' + encodeURIComponent($('q').value));
-  const banner = isAdmin()
-    ? `<div class="banner"><b>Owner mode.</b> You can delete videos, create access codes, and read messages.<div class="row"><button class="btn" data-go="admin">Open owner panel</button></div></div>`
-    : me ? ''
-    : `<div class="banner"><b>Private video library.</b> Videos are only for people the owner invites.<div class="row"><button class="btn" data-go="unlock">I have a code</button><button class="btn ghost" data-go="contact">Ask for access</button></div></div>`;
-  app.innerHTML = banner + (list.length ? `<div class="grid">${list.map(card).join('')}</div>` : '<div class="empty"><h2>No videos yet</h2></div>');
+  setActive('home');
+  const q = $('q').value;
+  const list = await api('/videos?q=' + encodeURIComponent(q));
+  app.innerHTML = (q ? '' : hero()) + '<h2 class="sec">LATEST VIDEOS</h2>' +
+    (list.length ? `<div class="grid">${list.map(card).join('')}</div>` : '<div class="empty"><h2>NO VIDEOS YET</h2></div>');
 }
 
 async function watch(id, noview) {
+  setActive('home');
   const [v, all] = await Promise.all([api('/videos/' + id + (noview ? '?noview=1' : '')), api('/videos')]);
   app.innerHTML = `<div class="watch"><section>
     <video src="/stream/${v.id}" controls autoplay playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false"></video>
     <h1>${esc(v.title)}</h1>
-    <div class="meta">${esc(v.author)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div>
+    <div class="meta">${who(v)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div>
     <div class="row"><button class="btn ghost ${v.liked ? 'on' : ''}" id="like">♥ ${v.likes}</button>${isAdmin() ? '<button class="btn ghost" id="del">Delete video</button>' : ''}</div>
     ${v.descr ? `<div class="desc">${esc(v.descr)}</div>` : ''}
-    <h2 style="font-size:17px">${v.comments.length} comment${v.comments.length === 1 ? '' : 's'}</h2>
-    <div class="cm"><input id="ci" type="text" placeholder="Add a comment" aria-label="Add a comment"><button class="btn" id="cb">Post</button></div>
+    <h2>${v.comments.length} COMMENT${v.comments.length === 1 ? '' : 'S'}</h2>
+    <div class="cm"><input id="ci" type="text" placeholder="Comment anonymously" aria-label="Add a comment"><button class="btn" id="cb">Post</button></div>
     <div class="err" id="err"></div>
-    ${v.comments.map(c => `<div class="c"><b>${esc(c.author)}</b> <span class="meta">${ago(c.at)}</span><br>${esc(c.body)}</div>`).join('')}
+    ${v.comments.map(c => `<div class="c"><b>${who(c)}</b> <span class="meta">${ago(c.at)}</span><br>${esc(c.body)}</div>`).join('')}
   </section><aside class="side">${all.filter(x => x.id !== v.id).map(card).join('')}</aside></div>`;
   const fail = e => $('err').textContent = e.message;
   $('like').onclick = () => api('/videos/' + id + '/like', { method: 'POST' }).then(r => { $('like').textContent = '♥ ' + r.likes; $('like').classList.toggle('on', r.liked); }).catch(fail);
@@ -110,34 +168,37 @@ async function watch(id, noview) {
 }
 
 function unlock(msg) {
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Unlock videos</h2>
+  setActive('unlock');
+  app.innerHTML = `<div class="box"><h2>UNLOCK VIDEOS</h2>
     <p class="meta" style="margin:0">${msg || 'Enter the access code the owner sent you.'}</p>
     <input id="code" type="text" placeholder="XXXXX-XXXXX" aria-label="Access code" autocapitalize="characters" autocomplete="off">
     <div class="err" id="err"></div><button class="btn" id="go">Unlock</button>
     <button class="link" data-go="contact">No code yet? Contact the owner</button></div>`;
   $('go').onclick = () => api('/redeem', { method: 'POST', json: { code: $('code').value } })
-    .then(async () => { me = await api('/me'); nav(); home(); }).catch(e => $('err').textContent = e.message);
+    .then(async () => { me = await api('/me'); home(); }).catch(e => $('err').textContent = e.message);
 }
 
 function contact() {
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Contact the owner</h2>
+  setActive('contact');
+  app.innerHTML = `<div class="box"><h2>CONTACT THE OWNER</h2>
     <p class="meta" style="margin:0">Ask for an access code or send a question. The owner replies using the contact info you give.</p>
     <input id="n" type="text" placeholder="Your name" aria-label="Your name">
     <input id="ct" type="text" placeholder="Email or WhatsApp number" aria-label="Email or WhatsApp number">
     <textarea id="m" rows="4" placeholder="Your message" aria-label="Your message"></textarea>
     <div class="err" id="err"></div><button class="btn" id="send">Send</button></div>`;
   $('send').onclick = () => api('/contact', { method: 'POST', json: { name: $('n').value, contact: $('ct').value, message: $('m').value } })
-    .then(() => app.innerHTML = '<div class="box"><p class="ok">Message sent.</p><p>The owner will reply using the contact info you gave.</p></div>')
+    .then(() => app.innerHTML = '<div class="box"><p class="ok">MESSAGE SENT.</p><p class="meta">The owner will reply using the contact info you gave.</p></div>')
     .catch(e => $('err').textContent = e.message);
 }
 
 function uploadForm() {
   if (!me) return unlock('Unlock first to upload videos.');
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Upload a video</h2>
+  setActive('upload');
+  app.innerHTML = `<div class="box"><h2>UPLOAD A VIDEO</h2>
     <input id="f" type="file" accept="video/*" aria-label="Video file">
     <input id="t" type="text" placeholder="Title" aria-label="Title">
     <input id="d" type="text" placeholder="Description (optional)" aria-label="Description">
-    <p class="meta" style="margin:0">Max 300 MB. Only the owner can delete videos.</p>
+    <p class="meta" style="margin:0">Max 300 MB. Your name stays hidden: only the owner sees who uploaded. Only the owner can delete videos.</p>
     <div class="err" id="err"></div><button class="btn" id="go">Publish</button></div>`;
   $('f').onchange = () => { if ($('f').files[0] && !$('t').value) $('t').value = $('f').files[0].name.replace(/\.[^.]+$/, ''); };
   $('go').onclick = async () => {
@@ -151,37 +212,40 @@ function uploadForm() {
 }
 
 function adminLogin() {
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Owner login</h2>
+  setActive('admin');
+  app.innerHTML = `<div class="box"><h2>OWNER LOGIN</h2>
     <input id="pw" type="password" placeholder="Owner password" aria-label="Owner password" autocomplete="current-password">
     <div class="err" id="err"></div><button class="btn" id="go">Log in</button></div>`;
   $('go').onclick = () => api('/admin/login', { method: 'POST', json: { password: $('pw').value } })
-    .then(async () => { me = await api('/me'); nav(); adminPanel(); }).catch(e => $('err').textContent = e.message);
+    .then(async () => { me = await api('/me'); adminPanel(); }).catch(e => $('err').textContent = e.message);
 }
 
 async function adminPanel() {
   if (!isAdmin()) return adminLogin();
+  setActive('admin');
   const [msgs, codes] = await Promise.all([api('/admin/messages'), api('/admin/codes')]);
-  app.innerHTML = `<h2>Owner panel</h2>
-    <h3>Access codes</h3>
+  app.innerHTML = `<h2 class="t">OWNER PANEL</h2>
+    <h3 class="t">Access codes</h3>
     <div class="cm"><input id="lab" type="text" placeholder="Who is this code for?" aria-label="Who is this code for"><button class="btn" id="mk">Create code</button></div>
     <div class="err" id="err"></div>
-    ${codes.map(c => `<div class="c"><b>${esc(c.label)}</b> <code>${esc(c.code)}</code> <button class="btn ghost sm" data-copy="${esc(c.code)}">Copy</button> <button class="btn ghost sm" data-rev="${c.id}">Revoke</button></div>`).join('') || '<p class="meta">No codes yet.</p>'}
-    <h3>Messages (${msgs.length})</h3>
+    ${codes.map(c => `<div class="c"><b>${esc(c.label)}</b> <span class="meta">shows as ${esc(c.alias)}</span> <code>${esc(c.code)}</code> <span class="meta">${c.claimed_at ? 'in use · since ' + ago(c.claimed_at) : 'not used yet'}</span><br><button class="btn ghost sm" data-copy="${esc(c.code)}">Copy</button> ${c.claimed_at ? `<button class="btn ghost sm" data-reset="${c.id}">Reset device</button> ` : ''}<button class="btn ghost sm" data-rev="${c.id}">Revoke</button></div>`).join('') || '<p class="meta">No codes yet.</p>'}
+    <h3 class="t">Messages (${msgs.length})</h3>
     ${msgs.map(m => `<div class="c"><b>${esc(m.name)}</b> · ${esc(m.contact)} <span class="meta">${ago(m.at)}</span><br>${esc(m.body)}<br><button class="btn ghost sm" data-dm="${m.id}">Delete</button></div>`).join('') || '<p class="meta">No messages yet.</p>'}`;
   $('mk').onclick = () => api('/admin/codes', { method: 'POST', json: { label: $('lab').value } }).then(adminPanel).catch(e => $('err').textContent = e.message);
 }
 
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-go],[data-id],[data-copy],[data-rev],[data-dm]');
+  const t = e.target.closest('[data-go],[data-id],[data-copy],[data-rev],[data-dm],[data-reset]');
   if (!t) return;
   try {
     if (t.dataset.id) { me ? watch(t.dataset.id) : unlock('Enter your access code to watch this video.'); }
     else if (t.dataset.copy) { await navigator.clipboard.writeText(t.dataset.copy); t.textContent = 'Copied'; return; }
     else if (t.dataset.rev) { if (confirm('Revoke this code? That person loses access right away.')) { await api('/admin/codes/' + t.dataset.rev, { method: 'DELETE' }); adminPanel(); } return; }
+    else if (t.dataset.reset) { if (confirm('Reset this code? The current device is logged out and the code works once more on a new device.')) { await api('/admin/codes/' + t.dataset.reset + '/reset', { method: 'POST' }); adminPanel(); } return; }
     else if (t.dataset.dm) { await api('/admin/messages/' + t.dataset.dm, { method: 'DELETE' }); adminPanel(); return; }
     else {
       const g = t.dataset.go;
-      if (g === 'logout') { await api('/logout', { method: 'POST' }); me = null; history.replaceState(null, '', location.pathname); nav(); home(); }
+      if (g === 'logout') { await api('/logout', { method: 'POST' }); me = null; history.replaceState(null, '', location.pathname); home(); }
       else ({ home, unlock, contact, upload: uploadForm, adminlogin: adminLogin, admin: adminPanel })[g]();
     }
     window.scrollTo(0, 0);

@@ -27,6 +27,24 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, name TEXT, contact TEXT, body TEXT, at INTEGER);
 `);
 
+// Each code can be claimed by one browser only (token + time of first use)
+const codeCols = db.prepare('PRAGMA table_info(codes)').all().map(c => c.name);
+if (!codeCols.includes('token')) db.exec('ALTER TABLE codes ADD COLUMN token TEXT');
+if (!codeCols.includes('claimed_at')) db.exec('ALTER TABLE codes ADD COLUMN claimed_at INTEGER');
+if (!codeCols.includes('alias')) db.exec('ALTER TABLE codes ADD COLUMN alias TEXT');
+for (const t of ['videos', 'comments']) {
+  if (!db.prepare(`PRAGMA table_info(${t})`).all().some(c => c.name === 'real_name')) db.exec(`ALTER TABLE ${t} ADD COLUMN real_name TEXT`);
+}
+// Public anonymous name: random letters, fixed per code. Only the owner sees the real name.
+const randomAlias = () => Array.from(crypto.randomBytes(10), b => 'abcdefghijklmnopqrstuvwxyz'[b % 26]).join('');
+for (const r of db.prepare('SELECT id FROM codes WHERE alias IS NULL').all()) db.prepare('UPDATE codes SET alias = ? WHERE id = ?').run(randomAlias(), r.id);
+// Real names are removed from every response unless the owner is logged in
+const hide = (req, rows) => {
+  const owner = req.user && req.user.role === 'admin';
+  const f = r => { if (!owner) delete r.real_name; return r; };
+  return Array.isArray(rows) ? rows.map(f) : f(rows);
+};
+
 const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '20kb' }));
@@ -44,11 +62,11 @@ app.use((req, res, next) => {
   if (t) {
     try {
       const p = jwt.verify(t, SECRET);
-      if (p.role === 'admin') req.user = { role: 'admin', who: 'a', name: 'Owner' };
+      if (p.role === 'admin') req.user = { role: 'admin', who: 'a', name: 'Owner', real: 'Owner' };
       else if (p.role === 'viewer') {
-        // Checked on every request, so revoking a code locks that person out immediately
+        // Checked on every request: revoking or resetting a code locks that browser out immediately
         const c = db.prepare('SELECT * FROM codes WHERE id = ?').get(p.id);
-        if (c) req.user = { role: 'viewer', who: 'c' + c.id, name: c.label };
+        if (c && c.token && c.token === p.t) req.user = { role: 'viewer', who: 'c' + c.id, name: c.alias || 'anon', real: c.label, codeId: c.id };
       }
     } catch {}
   }
@@ -81,7 +99,16 @@ app.post('/api/contact', limit('contact', 5, 3600e3), (req, res) => {
 app.post('/api/redeem', limit('redeem', 10, 900e3), (req, res) => {
   const c = db.prepare('SELECT * FROM codes WHERE code = ?').get(String(req.body.code || '').trim().toUpperCase());
   if (!c) return res.status(401).json({ error: 'That code is not valid.' });
-  setSession(req, res, { role: 'viewer', id: c.id });
+  const used = { error: 'This code has already been used on another device. Ask the owner for a new one.' };
+  if (c.token) {
+    // Already claimed: only the browser that claimed it may continue
+    if (req.user && req.user.role === 'viewer' && req.user.codeId === c.id) return res.json({ role: 'viewer', name: c.label });
+    return res.status(403).json(used);
+  }
+  const token = crypto.randomBytes(16).toString('hex');
+  const r = db.prepare('UPDATE codes SET token = ?, claimed_at = ? WHERE id = ? AND token IS NULL').run(token, Date.now(), c.id);
+  if (!r.changes) return res.status(403).json(used);
+  setSession(req, res, { role: 'viewer', id: c.id, t: token });
   res.json({ role: 'viewer', name: c.label });
 });
 
@@ -97,10 +124,10 @@ app.post('/api/logout', (req, res) => {
 });
 
 // Titles are public; the files are not
-const LIST = `SELECT v.id, v.title, v.author, v.views, v.at,
+const LIST = `SELECT v.id, v.title, v.author, v.real_name, v.views, v.at,
   (SELECT COUNT(*) FROM likes WHERE video_id = v.id) AS likes FROM videos v`;
 app.get('/api/videos', (req, res) => {
-  res.json(db.prepare(LIST + ' WHERE v.title LIKE ? ORDER BY v.at DESC LIMIT 100').all('%' + String(req.query.q || '') + '%'));
+  res.json(hide(req, db.prepare(LIST + ' WHERE v.title LIKE ? ORDER BY v.at DESC LIMIT 100').all('%' + String(req.query.q || '') + '%')));
 });
 
 // ---------- Members (code holders and owner) ----------
@@ -110,8 +137,8 @@ app.get('/api/videos/:id', member, (req, res) => {
   if (!req.query.noview) { db.prepare('UPDATE videos SET views = views + 1 WHERE id = ?').run(v.id); v.views++; }
   v.descr = db.prepare('SELECT descr FROM videos WHERE id = ?').get(v.id).descr;
   v.liked = !!db.prepare('SELECT 1 FROM likes WHERE who = ? AND video_id = ?').get(req.user.who, v.id);
-  v.comments = db.prepare('SELECT author, body, at FROM comments WHERE video_id = ? ORDER BY at DESC').all(v.id);
-  res.json(v);
+  v.comments = hide(req, db.prepare('SELECT author, real_name, body, at FROM comments WHERE video_id = ? ORDER BY at DESC').all(v.id));
+  res.json(hide(req, v));
 });
 
 const upload = multer({
@@ -127,8 +154,8 @@ app.post('/api/videos', member, upload.single('video'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Choose a video file.' });
   const title = String(req.body.title || '').trim().slice(0, 120);
   if (!title) { fs.unlink(req.file.path, () => {}); return res.status(400).json({ error: 'Add a title.' }); }
-  const r = db.prepare('INSERT INTO videos(title, descr, file, mime, author, at) VALUES(?, ?, ?, ?, ?, ?)')
-    .run(title, String(req.body.descr || '').slice(0, 2000), req.file.filename, req.file.mimetype, req.user.name, Date.now());
+  const r = db.prepare('INSERT INTO videos(title, descr, file, mime, author, real_name, at) VALUES(?, ?, ?, ?, ?, ?, ?)')
+    .run(title, String(req.body.descr || '').slice(0, 2000), req.file.filename, req.file.mimetype, req.user.name, req.user.real, Date.now());
   res.json({ id: r.lastInsertRowid });
 });
 
@@ -141,7 +168,7 @@ app.post('/api/videos/:id/like', member, (req, res) => {
 app.post('/api/videos/:id/comments', member, (req, res) => {
   const body = String(req.body.body || '').trim().slice(0, 1000);
   if (!body) return res.status(400).json({ error: 'Write something first.' });
-  db.prepare('INSERT INTO comments(video_id, author, body, at) VALUES(?, ?, ?, ?)').run(req.params.id, req.user.name, body, Date.now());
+  db.prepare('INSERT INTO comments(video_id, author, real_name, body, at) VALUES(?, ?, ?, ?, ?)').run(req.params.id, req.user.name, req.user.real, body, Date.now());
   res.json({ ok: true });
 });
 
@@ -172,16 +199,17 @@ app.delete('/api/videos/:id', admin, (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/admin/codes', admin, (req, res) => res.json(db.prepare('SELECT * FROM codes ORDER BY at DESC').all()));
+app.get('/api/admin/codes', admin, (req, res) => res.json(db.prepare('SELECT id, code, label, alias, at, claimed_at FROM codes ORDER BY at DESC').all()));
 app.post('/api/admin/codes', admin, (req, res) => {
   const label = String(req.body.label || '').trim().slice(0, 40);
   if (!label) return res.status(400).json({ error: 'Add a name for this code.' });
   const raw = crypto.randomBytes(5).toString('hex').toUpperCase();
   const code = raw.slice(0, 5) + '-' + raw.slice(5);
-  db.prepare('INSERT INTO codes(code, label, at) VALUES(?, ?, ?)').run(code, label, Date.now());
+  db.prepare('INSERT INTO codes(code, label, alias, at) VALUES(?, ?, ?, ?)').run(code, label, randomAlias(), Date.now());
   res.json({ code });
 });
 app.delete('/api/admin/codes/:id', admin, (req, res) => { db.prepare('DELETE FROM codes WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
+app.post('/api/admin/codes/:id/reset', admin, (req, res) => { db.prepare('UPDATE codes SET token = NULL, claimed_at = NULL WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
 
 app.get('/api/admin/messages', admin, (req, res) => res.json(db.prepare('SELECT * FROM messages ORDER BY at DESC LIMIT 200').all()));
 app.delete('/api/admin/messages/:id', admin, (req, res) => { db.prepare('DELETE FROM messages WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
