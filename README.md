@@ -1,32 +1,29 @@
-# Reba (private video site)
+# REBA — permanent cloud video storage
 
-Anyone can open the site and see video titles. To watch or upload, a visitor needs an
-access code from the owner. Only the owner can delete videos.
+This version sends newly uploaded videos to Cloudinary using authenticated video delivery. New uploads no longer depend on Render's temporary application filesystem. Existing locally stored videos are still read from `DATA_DIR/uploads` when those files are present.
 
-## Environment variables (required)
-- ADMIN_PASSWORD  your owner password
-- JWT_SECRET      a long random string (30+ characters)
-- DATA_DIR        optional: folder on a persistent disk for videos + database
-- PORT            set automatically by most hosts
+## Configure Render
 
-## Run on a computer
-    npm install
-    ADMIN_PASSWORD=yourpassword JWT_SECRET=long-random-text npm start
-(On Windows cmd use: set ADMIN_PASSWORD=yourpassword  then  set JWT_SECRET=long-random-text  then  npm start)
+1. Create a Cloudinary account and open its **API Environment variable** details.
+2. In Render, open your REBA Web Service → **Environment**. Add these variables using the exact values from Cloudinary:
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+3. Keep your existing `ADMIN_PASSWORD` and `JWT_SECRET` values unchanged. Do not paste Cloudinary secrets into the website or share them publicly.
+4. Deploy this project. Render will install the added `cloudinary` package.
+5. Sign in to REBA and upload a small test video. Confirm it plays, then test a larger video.
 
-Open http://localhost:3000
+Cloudinary stores new video files in the `reba/videos` folder as **authenticated** assets. REBA checks the existing member session before generating a signed playback URL. Deleting a video in the owner panel also requests deletion of its Cloudinary asset.
 
-## Using it
-1. Open your site address followed by /#owner (for example https://yoursite.onrender.com/#owner) and enter ADMIN_PASSWORD. Visitors never see this link.
-2. In the Owner panel, create a code for each person and send it to them.
-3. Chat with visitors in the same panel (a red badge shows new messages). Revoke a code to lock someone out instantly.
+## Important: database is separate
 
-## Deploying
-Use a host that gives you a persistent disk (Render, Railway, Fly.io, a small VPS) and set
-DATA_DIR to that disk's path. Without a persistent disk, videos, codes and messages are lost
-when the server restarts. Serve over HTTPS.
+The supplied `server.js` source uses Node's built-in SQLite database (`reba.db`), not Neon PostgreSQL. This cloud-storage change only makes the **video files** persistent; it does not migrate video metadata, comments, likes, access codes, or chat into Neon. Those records still need a persistent Render disk or a separate database migration. Do not replace your Neon database or change its connection settings based on this package.
 
-## About "no downloads"
-The site hides the download button and never exposes a file link: videos stream only to
-code holders and are not cached. That stops casual saving. Nothing can fully stop someone
-who is determined (screen recording, for example), so only give codes to people you trust.
+## Previously disappeared videos
+
+This change protects future uploads. It cannot automatically restore video files that were already erased from Render's temporary filesystem. Check Cloudinary Media Library, Render disk/backups, or any original copies before assuming they are unrecoverable.
+
+## Notes
+
+- The current upload limit remains 300 MB. Your Cloudinary plan's limits and usage still apply.
+- The server temporarily holds an uploaded file in memory while sending it to Cloudinary. For very large files or low-memory Render instances, a direct-to-Cloudinary signed browser upload flow would be a better next step.

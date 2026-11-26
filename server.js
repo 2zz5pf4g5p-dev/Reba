@@ -5,10 +5,18 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { v2: cloudinary } = require('cloudinary');
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SECRET = process.env.JWT_SECRET;
+const CLOUDINARY_READY = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+if (CLOUDINARY_READY) cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
 if (!ADMIN_PASSWORD || !SECRET) {
   console.error('Set the ADMIN_PASSWORD and JWT_SECRET environment variables first.');
   process.exit(1);
@@ -179,22 +187,43 @@ app.get('/api/videos/:id', member, (req, res) => {
   res.json(hide(req, v));
 });
 
+// New video uploads go directly to Cloudinary (persistent object storage), not Render's
+// temporary filesystem. Existing legacy files stored on disk remain streamable if present.
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: UPLOADS,
-    filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + path.extname(file.originalname).toLowerCase().slice(0, 8)),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 300 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('video/')),
 });
 
-app.post('/api/videos', member, upload.single('video'), (req, res) => {
+function uploadVideoToCloudinary(file) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream({
+      resource_type: 'video',
+      type: 'authenticated',
+      folder: 'reba/videos',
+      use_filename: false,
+      unique_filename: true,
+    }, (error, result) => error ? reject(error) : resolve(result));
+    stream.end(file.buffer);
+  });
+}
+
+app.post('/api/videos', member, upload.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Choose a video file.' });
   const title = String(req.body.title || '').trim().slice(0, 120);
-  if (!title) { fs.unlink(req.file.path, () => {}); return res.status(400).json({ error: 'Add a title.' }); }
-  const r = db.prepare('INSERT INTO videos(title, descr, file, mime, author, real_name, at) VALUES(?, ?, ?, ?, ?, ?, ?)')
-    .run(title, String(req.body.descr || '').slice(0, 2000), req.file.filename, req.file.mimetype, req.user.name, req.user.real, Date.now());
-  res.json({ id: r.lastInsertRowid });
+  if (!title) return res.status(400).json({ error: 'Add a title.' });
+  if (!CLOUDINARY_READY) return res.status(503).json({ error: 'Cloud video storage is not configured yet. Add the Cloudinary environment variables on Render.' });
+
+  try {
+    const uploaded = await uploadVideoToCloudinary(req.file);
+    const storedFile = 'cloudinary:' + uploaded.public_id;
+    const r = db.prepare('INSERT INTO videos(title, descr, file, mime, author, real_name, at) VALUES(?, ?, ?, ?, ?, ?, ?)')
+      .run(title, String(req.body.descr || '').slice(0, 2000), storedFile, req.file.mimetype, req.user.name, req.user.real, Date.now());
+    res.json({ id: r.lastInsertRowid });
+  } catch (error) {
+    console.error('Cloudinary video upload failed:', error.message);
+    res.status(502).json({ error: 'The video could not be saved to cloud storage. Please try again.' });
+  }
 });
 
 app.post('/api/videos/:id/like', member, (req, res) => {
@@ -214,6 +243,16 @@ app.post('/api/videos/:id/comments', member, (req, res) => {
 app.get('/stream/:id', member, (req, res) => {
   const v = db.prepare('SELECT file, mime FROM videos WHERE id = ?').get(req.params.id);
   if (!v) return res.sendStatus(404);
+  if (String(v.file).startsWith('cloudinary:')) {
+    if (!CLOUDINARY_READY) return res.status(503).send('Cloud video storage is not configured.');
+    const publicId = String(v.file).slice('cloudinary:'.length);
+    const signedUrl = cloudinary.url(publicId, {
+      resource_type: 'video', type: 'authenticated', sign_url: true, secure: true,
+      format: undefined,
+    });
+    res.setHeader('Cache-Control', 'private, no-store');
+    return res.redirect(302, signedUrl);
+  }
   const p = path.join(UPLOADS, v.file);
   let size;
   try { size = fs.statSync(p).size; } catch { return res.sendStatus(404); }
@@ -233,7 +272,13 @@ app.delete('/api/videos/:id', admin, (req, res) => {
   const v = db.prepare('SELECT file FROM videos WHERE id = ?').get(req.params.id);
   if (!v) return res.status(404).json({ error: 'Not found.' });
   for (const t of ['videos', 'likes', 'comments']) db.prepare(`DELETE FROM ${t} WHERE ${t === 'videos' ? 'id' : 'video_id'} = ?`).run(req.params.id);
-  fs.unlink(path.join(UPLOADS, v.file), () => {});
+  if (String(v.file).startsWith('cloudinary:') && CLOUDINARY_READY) {
+    const publicId = String(v.file).slice('cloudinary:'.length);
+    cloudinary.uploader.destroy(publicId, { resource_type: 'video', type: 'authenticated' })
+      .catch(error => console.error('Cloudinary delete failed:', error.message));
+  } else {
+    fs.unlink(path.join(UPLOADS, v.file), () => {});
+  }
   res.json({ ok: true });
 });
 
