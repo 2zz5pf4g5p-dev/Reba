@@ -1,327 +1,111 @@
 const express = require('express');
-const multer = require('multer');
-const { DatabaseSync: Database } = require('node:sqlite');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const path = require('path');
-const fs = require('fs');
-
-const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const SECRET = process.env.JWT_SECRET;
-if (!ADMIN_PASSWORD || !SECRET) {
-  console.error('Set the ADMIN_PASSWORD and JWT_SECRET environment variables first.');
-  process.exit(1);
-}
-// Point DATA_DIR at a persistent disk when you deploy, so videos and the database survive restarts
-const DATA = process.env.DATA_DIR || __dirname;
-const UPLOADS = path.join(DATA, 'uploads');
-fs.mkdirSync(UPLOADS, { recursive: true });
-
-const db = new Database(path.join(DATA, 'reba.db'));
-try { db.exec('ALTER TABLE codes ADD COLUMN used_by TEXT'); } catch {}
-try { db.exec('ALTER TABLE codes ADD COLUMN used_at INTEGER'); } catch {}
-db.exec(`
-  CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY, code TEXT UNIQUE, label TEXT, at INTEGER, used_by TEXT, used_at INTEGER);
-  CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE, pass_hash TEXT, salt TEXT, at INTEGER);
-  CREATE TABLE IF NOT EXISTS direct_messages(id INTEGER PRIMARY KEY, user_id INTEGER, sender TEXT, body TEXT, at INTEGER);
-  CREATE TABLE IF NOT EXISTS videos(id INTEGER PRIMARY KEY, title TEXT, descr TEXT, file TEXT, mime TEXT, author TEXT, views INTEGER DEFAULT 0, at INTEGER);
-  CREATE TABLE IF NOT EXISTS likes(who TEXT, video_id INTEGER, PRIMARY KEY(who, video_id));
-  CREATE TABLE IF NOT EXISTS comments(id INTEGER PRIMARY KEY, video_id INTEGER, author TEXT, body TEXT, at INTEGER);
-  CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, name TEXT, contact TEXT, body TEXT, at INTEGER);
-`);
+const multer = require('multer');
+const { Pool } = require('pg');
 
 const app = express();
-app.set('trust proxy', 1);
-app.use(express.json({ limit: '20kb' }));
+const PORT = process.env.PORT || 3000;
 
-// ---------- Password helpers ----------
-const hashPass = (pw, salt = crypto.randomBytes(16).toString('hex')) => ({
-  salt,
-  hash: crypto.scryptSync(pw, salt, 64).toString('hex'),
+if (!process.env.DATABASE_URL) {
+  console.error('Missing DATABASE_URL environment variable.');
+  process.exit(1);
+}
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
-const same = (a, b) => crypto.timingSafeEqual(crypto.createHash('sha256').update(a).digest(), crypto.createHash('sha256').update(b).digest());
-const verifyPass = (pw, salt, expectedHash) => {
-  const actual = crypto.scryptSync(pw, salt, 64);
-  const expected = Buffer.from(expectedHash, 'hex');
-  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
-};
 
-// ---------- Sessions (one cookie: owner, user, or code-holder) ----------
-const readCookie = (req, k) => {
-  const m = (req.headers.cookie || '').split(/;\s*/).find(c => c.startsWith(k + '='));
-  return m ? decodeURIComponent(m.slice(k.length + 1)) : null;
-};
-const setSession = (req, res, payload) => res.setHeader('Set-Cookie',
-  `reba=${jwt.sign(payload, SECRET, { expiresIn: '30d' })}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000${req.secure ? '; Secure' : ''}`);
+pool.on('error', (err) => {
+  console.error('Unexpected Postgres pool error:', err);
+});
 
-app.use((req, res, next) => {
-  const t = readCookie(req, 'reba');
-  if (t) {
-    try {
-      const p = jwt.verify(t, SECRET);
-      if (p.role === 'admin') req.user = { role: 'admin', who: 'a', name: 'Owner' };
-      else if (p.role === 'user') {
-        const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(p.id);
-        if (u) req.user = { role: 'user', id: u.id, who: 'u' + u.id, name: u.username };
-      } else if (p.role === 'viewer') {
-        // Checked on every request: must exist and have a valid holder claim
-        const c = db.prepare('SELECT * FROM codes WHERE id = ?').get(p.id);
-        if (c && c.used_by && p.holder) {
-          req.user = { role: 'viewer', who: p.holder, name: c.label };
-        }
-      }
-    } catch {}
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS access_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      used BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id SERIAL PRIMARY KEY,
+      author TEXT NOT NULL,
+      body TEXT NOT NULL,
+      metadata JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+}
+
+app.use(express.json());
+app.use(express.static('.'));
+
+app.get('/health', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW() AS now');
+    res.json({ ok: true, dbTime: result.rows[0].now });
+  } catch (err) {
+    console.error('Healthcheck DB error:', err);
+    res.status(500).json({ ok: false, error: 'Database unavailable' });
   }
-  next();
 });
-const member = (req, res, next) => req.user ? next() : res.status(401).json({ error: 'Create an account, sign in, or enter an access code first.' });
-const accountUser = (req, res, next) => req.user && req.user.role === 'user' ? next() : res.status(403).json({ error: 'Sign in with a user account first.' });
-const admin = (req, res, next) => req.user && req.user.role === 'admin' ? next() : res.status(403).json({ error: 'Owner only.' });
 
-const hits = new Map();
-const limit = (name, max, ms) => (req, res, next) => {
-  const k = name + req.ip, now = Date.now();
-  const a = (hits.get(k) || []).filter(t => now - t < ms);
-  if (a.length >= max) return res.status(429).json({ error: 'Too many tries. Please wait a while.' });
-  a.push(now); hits.set(k, a); next();
-};
-
-// ---------- Public ----------
-app.get('/api/me', (req, res) => res.json(req.user ? { role: req.user.role, name: req.user.name } : null));
-
-app.post('/api/register', limit('register', 10, 3600e3), (req, res) => {
-  const username = String(req.body.username || '').trim().slice(0, 30);
-  const password = String(req.body.password || '');
-  if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username)) {
-    return res.status(400).json({ error: 'Username must be 3-30 characters (letters, numbers, ., _, -).' });
+app.get('/api/comments', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, author, body, metadata, created_at FROM comments ORDER BY id DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('GET /api/comments error:', err);
+    res.status(500).json({ error: 'Failed to load comments' });
   }
-  if (password.length < 6 || password.length > 128) {
-    return res.status(400).json({ error: 'Password must be between 6 and 128 characters.' });
+});
+
+app.post('/api/comments', async (req, res) => {
+  const { author, body, metadata = {} } = req.body || {};
+  if (!author || !body) {
+    return res.status(400).json({ error: 'author and body are required' });
   }
-  const existing = db.prepare('SELECT id FROM users WHERE LOWER(username) = LOWER(?)').get(username);
-  if (existing) return res.status(409).json({ error: 'That username is already taken.' });
 
-  const { salt, hash } = hashPass(password);
-  const r = db.prepare('INSERT INTO users(username, pass_hash, salt, at) VALUES(?, ?, ?, ?)').run(username, hash, salt, Date.now());
-  setSession(req, res, { role: 'user', id: r.lastInsertRowid });
-  res.json({ role: 'user', name: username });
-});
-
-app.post('/api/login', limit('login', 15, 900e3), (req, res) => {
-  const username = String(req.body.username || '').trim();
-  const password = String(req.body.password || '');
-  if (!username || !password) return res.status(400).json({ error: 'Enter your username and password.' });
-  const u = db.prepare('SELECT id, username, pass_hash, salt FROM users WHERE LOWER(username) = LOWER(?)').get(username);
-  if (!u || !verifyPass(password, u.salt, u.pass_hash)) {
-    return res.status(401).json({ error: 'Invalid username or password.' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO comments (author, body, metadata)
+       VALUES ($1, $2, $3)
+       RETURNING id, author, body, metadata, created_at`,
+      [author, body, metadata]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error('POST /api/comments error:', err);
+    res.status(500).json({ error: 'Failed to save comment' });
   }
-  setSession(req, res, { role: 'user', id: u.id });
-  res.json({ role: 'user', name: u.username });
 });
 
-app.post('/api/contact', limit('contact', 5, 3600e3), (req, res) => {
-  const name = String(req.body.name || '').trim().slice(0, 80);
-  const contact = String(req.body.contact || '').trim().slice(0, 120);
-  const body = String(req.body.message || '').trim().slice(0, 1500);
-  if (!name || !contact || !body) return res.status(400).json({ error: 'Fill in your name, how to reach you, and a message.' });
-  db.prepare('INSERT INTO messages(name, contact, body, at) VALUES(?, ?, ?, ?)').run(name, contact, body, Date.now());
-  res.json({ ok: true });
-});
-
-app.post('/api/redeem', limit('redeem', 10, 900e3), (req, res) => {
-  const c = db.prepare('SELECT * FROM codes WHERE code = ?').get(String(req.body.code || '').trim().toUpperCase());
-  if (!c) return res.status(401).json({ error: 'That code is not valid.' });
-  const token = crypto.randomBytes(6).toString('hex');
-  const displayWho = (req.user && req.user.role === 'user')
-    ? `${req.user.name} (account #${req.user.id})`
-    : `Viewer #${token}`;
-  const holderKey = req.user ? `${req.user.who}:${token}` : `v-${token}`;
-  if (c.used_by) {
-    return res.status(409).json({ error: 'This view code has already been used by someone else (single-use only).' });
+async function start() {
+  try {
+    await initDb();
+    app.listen(PORT, () => {
+      console.log(`Reba running on port ${PORT} with Postgres persistence`);
+    });
+  } catch (err) {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
   }
-  const resUpdate = db.prepare('UPDATE codes SET used_by = ?, used_at = ? WHERE id = ? AND used_by IS NULL').run(displayWho, Date.now(), c.id);
-  if (!resUpdate.changes) {
-    return res.status(409).json({ error: 'This view code has already been used by someone else (single-use only).' });
-  }
-  setSession(req, res, { role: 'viewer', id: c.id, holder: holderKey });
-  res.json({ role: 'viewer', name: c.label });
-});
+}
 
-app.post('/api/admin/login', limit('admin', 10, 900e3), (req, res) => {
-  if (!same(String(req.body.password || ''), ADMIN_PASSWORD)) return res.status(401).json({ error: 'Wrong password.' });
-  setSession(req, res, { role: 'admin' });
-  res.json({ role: 'admin', name: 'Owner' });
-});
-
-app.post('/api/logout', (req, res) => {
-  res.setHeader('Set-Cookie', 'reba=; HttpOnly; Path=/; Max-Age=0');
-  res.json({ ok: true });
-});
-
-// Titles are public; the files are not
-const LIST = `SELECT v.id, v.title, v.author, v.views, v.at,
-  (SELECT COUNT(*) FROM likes WHERE video_id = v.id) AS likes,
-  (SELECT COUNT(*) FROM comments WHERE video_id = v.id) AS comments FROM videos v`;
-app.get('/api/videos', (req, res) => {
-  const sortKey = String(req.query.sort || 'new').toLowerCase();
-  const sort = sortKey === 'views'
-    ? 'ORDER BY v.views DESC, v.at DESC'
-    : (sortKey === 'likes'
-      ? 'ORDER BY likes DESC, v.at DESC'
-      : 'ORDER BY v.at DESC');
-  res.json(db.prepare(`${LIST} WHERE v.title LIKE ? ${sort} LIMIT 100`).all('%' + String(req.query.q || '') + '%'));
-});
-
-// ---------- Account-holder direct messages ----------
-app.get('/api/dm', accountUser, (req, res) => {
-  const rows = db.prepare('SELECT id, sender, body, at FROM direct_messages WHERE user_id = ? ORDER BY at ASC LIMIT 200').all(req.user.id);
-  res.json(rows);
-});
-
-app.post('/api/dm', accountUser, limit('dm_user', 20, 600e3), (req, res) => {
-  const body = String(req.body.body || '').trim().slice(0, 1500);
-  if (!body) return res.status(400).json({ error: 'Write a message first.' });
-  db.prepare('INSERT INTO direct_messages(user_id, sender, body, at) VALUES(?, ?, ?, ?)').run(req.user.id, req.user.name, body, Date.now());
-  res.json({ ok: true });
-});
-
-// ---------- Members (account holders, code holders, and owner) ----------
-app.get('/api/videos/:id', member, (req, res) => {
-  const v = db.prepare(LIST + ' WHERE v.id = ?').get(req.params.id);
-  if (!v) return res.status(404).json({ error: 'Video not found.' });
-  if (!req.query.noview) { db.prepare('UPDATE videos SET views = views + 1 WHERE id = ?').run(v.id); v.views++; }
-  v.descr = db.prepare('SELECT descr FROM videos WHERE id = ?').get(v.id).descr;
-  v.liked = !!db.prepare('SELECT 1 FROM likes WHERE who = ? AND video_id = ?').get(req.user.who, v.id);
-  v.comments = db.prepare('SELECT id, author, body, at FROM comments WHERE video_id = ? ORDER BY at DESC').all(v.id);
-  res.json(v);
-});
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: UPLOADS,
-    filename: (req, file, cb) => cb(null, crypto.randomBytes(12).toString('hex') + path.extname(file.originalname).toLowerCase().slice(0, 8)),
-  }),
-  limits: { fileSize: 300 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('video/')),
-});
-
-app.post('/api/videos', member, upload.single('video'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Choose a video file.' });
-  const title = String(req.body.title || '').trim().slice(0, 120);
-  if (!title) { fs.unlink(req.file.path, () => {}); return res.status(400).json({ error: 'Add a title.' }); }
-  const authorName = req.user.role === 'admin' ? 'Owner' : req.user.name;
-  const r = db.prepare('INSERT INTO videos(title, descr, file, mime, author, at) VALUES(?, ?, ?, ?, ?, ?)')
-    .run(title, String(req.body.descr || '').slice(0, 2000), req.file.filename, req.file.mimetype, authorName, Date.now());
-  res.json({ id: r.lastInsertRowid });
-});
-
-app.post('/api/videos/:id/like', member, (req, res) => {
-  const had = db.prepare('DELETE FROM likes WHERE who = ? AND video_id = ?').run(req.user.who, req.params.id).changes;
-  if (!had) db.prepare('INSERT INTO likes VALUES(?, ?)').run(req.user.who, req.params.id);
-  res.json({ liked: !had, likes: db.prepare('SELECT COUNT(*) AS n FROM likes WHERE video_id = ?').get(req.params.id).n });
-});
-
-app.post('/api/videos/:id/comments', member, (req, res) => {
-  const body = String(req.body.body || '').trim().slice(0, 1000);
-  if (!body) return res.status(400).json({ error: 'Write something first.' });
-  db.prepare('INSERT INTO comments(video_id, author, body, at) VALUES(?, ?, ?, ?)').run(req.params.id, req.user.name, body, Date.now());
-  res.json({ ok: true });
-});
-
-// Video bytes only go to members (any valid access code unlocks every video). Stream-only (no download).
-app.get('/stream/:id', member, (req, res) => {
-  const v = db.prepare('SELECT file, mime FROM videos WHERE id = ?').get(req.params.id);
-  if (!v) return res.sendStatus(404);
-  const p = path.join(UPLOADS, v.file);
-  let size;
-  try { size = fs.statSync(p).size; } catch { return res.sendStatus(404); }
-  const h = {
-    'Content-Type': v.mime || 'video/mp4',
-    'Accept-Ranges': 'bytes',
-    'Cache-Control': 'private, no-store, no-cache, must-revalidate',
-    'Pragma': 'no-cache',
-    'Content-Disposition': 'inline',
-    'X-Content-Type-Options': 'nosniff',
-  };
-  const m = req.headers.range && /bytes=(\d*)-(\d*)/.exec(req.headers.range);
-  if (!m) { res.writeHead(200, { ...h, 'Content-Length': size }); return fs.createReadStream(p).pipe(res); }
-  let s = m[1] ? parseInt(m[1]) : 0, e = m[2] ? parseInt(m[2]) : size - 1;
-  if (!m[1] && m[2]) { s = Math.max(0, size - parseInt(m[2])); e = size - 1; }
-  e = Math.min(e, size - 1);
-  if (s > e) return res.status(416).set('Content-Range', 'bytes */' + size).end();
-  res.writeHead(206, { ...h, 'Content-Range': `bytes ${s}-${e}/${size}`, 'Content-Length': e - s + 1 });
-  fs.createReadStream(p, { start: s, end: e }).pipe(res);
-});
-
-// ---------- Owner only ----------
-app.get('/api/admin/users', admin, (req, res) => {
-  const users = db.prepare('SELECT id, username, at FROM users ORDER BY username COLLATE NOCASE ASC').all();
-  res.json(users);
-});
-
-app.get('/api/admin/dm/:userId', admin, (req, res) => {
-  const userId = Number(req.params.userId);
-  const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(userId);
-  if (!u) return res.status(404).json({ error: 'User not found.' });
-  const messages = db.prepare('SELECT id, sender, body, at FROM direct_messages WHERE user_id = ? ORDER BY at ASC LIMIT 200').all(userId);
-  res.json({ user: u, messages });
-});
-
-app.post('/api/admin/dm/:userId', admin, (req, res) => {
-  const userId = Number(req.params.userId);
-  const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(userId);
-  if (!u) return res.status(404).json({ error: 'User not found.' });
-  const body = String(req.body.body || '').trim().slice(0, 1500);
-  if (!body) return res.status(400).json({ error: 'Write a message first.' });
-  db.prepare('INSERT INTO direct_messages(user_id, sender, body, at) VALUES(?, ?, ?, ?)').run(userId, 'Owner', body, Date.now());
-  res.json({ ok: true });
-});
-
-app.delete('/api/comments/:id', admin, (req, res) => {
-  const r = db.prepare('DELETE FROM comments WHERE id = ?').run(req.params.id);
-  if (!r.changes) return res.status(404).json({ error: 'Comment not found.' });
-  res.json({ ok: true });
-});
-
-app.delete('/api/videos/:id', admin, (req, res) => {
-  const v = db.prepare('SELECT file FROM videos WHERE id = ?').get(req.params.id);
-  if (!v) return res.status(404).json({ error: 'Not found.' });
-  for (const t of ['videos', 'likes', 'comments']) db.prepare(`DELETE FROM ${t} WHERE ${t === 'videos' ? 'id' : 'video_id'} = ?`).run(req.params.id);
-  fs.unlink(path.join(UPLOADS, v.file), () => {});
-  res.json({ ok: true });
-});
-
-app.get('/api/admin/codes', admin, (req, res) => res.json(db.prepare('SELECT * FROM codes ORDER BY at DESC').all()));
-app.post('/api/admin/codes', admin, (req, res) => {
-  const label = String(req.body.label || '').trim().slice(0, 40);
-  if (!label) return res.status(400).json({ error: 'Add a name for this code.' });
-  const raw = crypto.randomBytes(5).toString('hex').toUpperCase();
-  const code = raw.slice(0, 5) + '-' + raw.slice(5);
-  db.prepare('INSERT INTO codes(code, label, at) VALUES(?, ?, ?)').run(code, label, Date.now());
-  res.json({ code });
-});
-app.delete('/api/admin/codes/:id', admin, (req, res) => {
-  const codeId = Number(req.params.id);
-  if (!Number.isInteger(codeId) || codeId <= 0) return res.status(400).json({ error: 'Invalid code ID.' });
-  const r = db.prepare('DELETE FROM codes WHERE id = ?').run(codeId);
-  if (!r.changes) return res.status(404).json({ error: 'Code not found.' });
-  res.json({ ok: true });
-});
-
-app.get('/api/admin/comments', admin, (req, res) => {
-  const rows = db.prepare(`
-    SELECT c.id, c.video_id, c.author, c.body, c.at, v.title AS video_title
-    FROM comments c
-    LEFT JOIN videos v ON v.id = c.video_id
-    ORDER BY c.at DESC
-    LIMIT 200
-  `).all();
-  res.json(rows);
-});
-
-app.get('/api/admin/messages', admin, (req, res) => res.json(db.prepare('SELECT * FROM messages ORDER BY at DESC LIMIT 200').all()));
-app.delete('/api/admin/messages/:id', admin, (req, res) => { db.prepare('DELETE FROM messages WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
-
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, () => console.log(`Reba running on port ${PORT}`));
+start();
