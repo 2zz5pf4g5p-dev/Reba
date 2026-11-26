@@ -1,192 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Reba</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1b7f4b">
-<style>
-:root{--bg:#f6f7f3;--surface:#fff;--ink:#17201a;--mute:#5f6b63;--line:#dfe4dc;--brand:#1b7f4b;--on:#fff;--like:#c8312f}
-@media (prefers-color-scheme:dark){:root{--bg:#121a15;--surface:#1b2620;--ink:#eef3ee;--mute:#9aa89e;--line:#2c3a31;--brand:#3fbf7f;--on:#08150d;--like:#ff6b68}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
-button,input,textarea{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px}
-.top{display:flex;gap:8px;align-items:center}
-.logo{font-weight:800;font-size:22px;color:var(--brand);background:none;border:0;cursor:pointer;padding:0;white-space:nowrap}
-.search{flex:1;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.btn{padding:8px 14px;border:0;border-radius:999px;background:var(--brand);color:var(--on);font-weight:700;cursor:pointer;white-space:nowrap}
-.btn.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
-.btn.on{background:var(--like);color:#fff}
-.btn.sm{padding:4px 10px;font-size:13px}
-.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer}
-:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
-main{max-width:1100px;margin:0 auto;padding:16px 14px 30px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px 14px}
-.card{background:none;border:0;padding:0;text-align:left;cursor:pointer;width:100%}
-.card video,.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:34px;pointer-events:none}
-.card h3{margin:8px 0 2px;font-size:15px}
-.meta{color:var(--mute);font-size:13px}
-.banner{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
-.empty{text-align:center;padding:50px 16px;color:var(--mute)}
-.watch{display:grid;gap:16px}
-@media(min-width:900px){.watch{grid-template-columns:1fr 320px}}
-.watch>section>video{width:100%;max-height:70vh;background:#000;border-radius:12px;display:block}
-h1{font-size:20px;margin:12px 0 4px}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.desc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap}
-.cm{display:flex;gap:8px;margin:10px 0}
-input[type=text],input[type=password],textarea{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.c{padding:8px 0;border-bottom:1px solid var(--line)}
-.box{display:grid;gap:10px;max-width:440px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
-.err{color:var(--like);min-height:1.3em;font-size:14px}
-.ok{color:var(--brand);font-weight:700}
-.side .card{margin-bottom:12px}
-code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:15px}
-footer{text-align:center;padding:10px 0 24px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reba</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0c1712;
+      color: #eef5f0;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 820px; margin: 0 auto; padding: 18px 16px 64px; }
+    .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .brand { font-size: 20px; font-weight: 700; color: #fff; text-decoration: none; margin-right: 4px; }
+    .search { flex: 1; min-width: 180px; background: #14241c; border: 1px solid #264234; color: #fff; padding: 9px 12px; border-radius: 999px; font-size: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; align-items: center; }
+    button, .btn {
+      background: #1b2e24;
+      color: #e6f2eb;
+      border: 1px solid #2f5240;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.primary { background: #36b368; color: #07140c; border-color: #36b368; }
+    button.danger { background: #3a171b; color: #ff9aa2; border-color: #6e272f; padding: 5px 10px; font-size: 12px; }
+    button.ghost { background: transparent; border-color: #264234; color: #a9c4b5; }
+    button.active-tab { background: #264234; color: #fff; border-color: #487a60; }
+    .card {
+      background: #122119;
+      border: 1px solid #223b2e;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    h2, h3 { margin: 0 0 10px; font-size: 17px; }
+    label { display: block; font-size: 12px; color: #9ab5a6; margin: 10px 0 4px; }
+    input, textarea {
+      width: 100%;
+      background: #0b1410;
+      border: 1px solid #294738;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .msg-err { color: #ff8a93; font-size: 13px; margin-top: 8px; }
+    .msg-ok { color: #5ce08e; font-size: 13px; margin-top: 8px; }
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+    .video-tile { background: #122119; border: 1px solid #223b2e; border-radius: 14px; padding: 14px; cursor: pointer; }
+    .video-tile:hover { border-color: #36b368; }
+    .meta { font-size: 12px; color: #8da899; margin-top: 6px; }
+    video { width: 100%; border-radius: 12px; background: #000; max-height: 440px; }
+    .comment { border-top: 1px solid #1e3529; padding: 10px 0; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .comment:first-child { border-top: none; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #182b21; font-size: 12px; color: #a9d5ba; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
-<header>
-  <div class="top"><button class="logo" data-go="home">▶ Reba</button><input class="search" id="q" type="search" placeholder="Search videos" aria-label="Search videos"></div>
-  <nav id="nav"></nav>
-</header>
-<main id="app"></main>
-<footer><button class="link" data-go="adminlogin">Owner login</button></footer>
-<script>
-const $ = id => document.getElementById(id), app = $('app');
-let me = null;
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ago = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.floor(m / 60) + ' h ago' : Math.floor(m / 1440) + ' d ago'; };
-const isAdmin = () => me && me.role === 'admin';
+  <div class="wrap">
+    <div class="topbar">
+      <a class="brand" href="#" onclick="showHome(); return false;">&#9654; Reba</a>
+      <input id="searchInput" class="search" type="search" placeholder="Search videos" oninput="loadVideos()" />
+    </div>
 
-async function api(path, opts = {}) {
-  const headers = {};
-  if (opts.json) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(opts.json); }
-  const r = await fetch('/api' + path, { ...opts, headers });
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.error || 'Something went wrong.');
-  return d;
-}
+    <div class="actions">
+      <button id="btnUnlock" class="primary" onclick="openAuthModal('register')">Create account / Sign in</button>
+      <button id="btnContact" onclick="openContactModal()">Contact owner</button>
+      <span id="userBadge" class="pill hidden"></span>
+      <button id="btnUploadToggle" class="hidden" onclick="toggleUpload()">Upload video</button>
+      <button id="btnOwnerPanelToggle" class="hidden" onclick="toggleOwnerPanel()">Owner panel</button>
+      <button id="btnLogout" class="ghost hidden" onclick="logout()">Log out</button>
+    </div>
 
-function nav() {
-  $('nav').innerHTML =
-    (me ? '<button class="btn" data-go="upload">Upload</button>' : '<button class="btn" data-go="unlock">Unlock videos</button>') +
-    '<button class="btn ghost" data-go="contact">Contact owner</button>' +
-    (isAdmin() ? '<button class="btn ghost" data-go="admin">Owner panel</button>' : '') +
-    (me ? '<button class="btn ghost" data-go="logout">Log out</button>' : '');
-}
+    <!-- Auth Card (Create Account, User Sign In, Access Code, Owner Login) -->
+    <div id="authCard" class="card hidden">
+      <div class="tabs">
+        <button id="tabRegister" class="active-tab" onclick="switchAuthTab('register')">Create account</button>
+        <button id="tabLogin" class="ghost" onclick="switchAuthTab('login')">User sign in</button>
+        <button id="tabCode" class="ghost" onclick="switchAuthTab('code')">Access code</button>
+        <button id="tabOwner" class="ghost" onclick="switchAuthTab('owner')">Owner login</button>
+      </div>
 
-const card = v => `<button class="card" data-id="${v.id}">${me
-  ? `<video src="/stream/${v.id}#t=1" preload="metadata" muted playsinline></video>`
-  : '<div class="thumb">🔒</div>'}<h3>${esc(v.title)}</h3><div class="meta">${esc(v.author)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div></button>`;
+      <form id="formRegister" onsubmit="submitRegister(event)">
+        <h2>Create an account</h2>
+        <label>Username</label>
+        <input id="regUsername" type="text" placeholder="3-30 chars (letters, numbers, ._ -)" required />
+        <label>Password</label>
+        <input id="regPassword" type="password" placeholder="At least 6 characters" required />
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="primary">Create account</button>
+          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
+        </div>
+      </form>
 
-async function home() {
-  const list = await api('/videos?q=' + encodeURIComponent($('q').value));
-  const banner = me ? '' : `<div class="banner"><b>Videos here are private.</b> Contact the owner to get an access code, then tap “Unlock videos”.</div>`;
-  app.innerHTML = banner + (list.length ? `<div class="grid">${list.map(card).join('')}</div>` : '<div class="empty"><h2>No videos yet</h2></div>');
-}
+      <form id="formLogin" class="hidden" onsubmit="submitLogin(event)">
+        <h2>Sign in</h2>
+        <label>Username</label>
+        <input id="loginUsername" type="text" required />
+        <label>Password</label>
+        <input id="loginPassword" type="password" required />
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="primary">Sign in</button>
+          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
+        </div>
+      </form>
 
-async function watch(id, noview) {
-  const [v, all] = await Promise.all([api('/videos/' + id + (noview ? '?noview=1' : '')), api('/videos')]);
-  app.innerHTML = `<div class="watch"><section>
-    <video src="/stream/${v.id}" controls autoplay playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false"></video>
-    <h1>${esc(v.title)}</h1>
-    <div class="meta">${esc(v.author)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div>
-    <div class="row"><button class="btn ghost ${v.liked ? 'on' : ''}" id="like">♥ ${v.likes}</button>${isAdmin() ? '<button class="btn ghost" id="del">Delete video</button>' : ''}</div>
-    ${v.descr ? `<div class="desc">${esc(v.descr)}</div>` : ''}
-    <h2 style="font-size:17px">${v.comments.length} comment${v.comments.length === 1 ? '' : 's'}</h2>
-    <div class="cm"><input id="ci" type="text" placeholder="Add a comment" aria-label="Add a comment"><button class="btn" id="cb">Post</button></div>
-    <div class="err" id="err"></div>
-    ${v.comments.map(c => `<div class="c"><b>${esc(c.author)}</b> <span class="meta">${ago(c.at)}</span><br>${esc(c.body)}</div>`).join('')}
-  </section><aside class="side">${all.filter(x => x.id !== v.id).map(card).join('')}</aside></div>`;
-  const fail = e => $('err').textContent = e.message;
-  $('like').onclick = () => api('/videos/' + id + '/like', { method: 'POST' }).then(r => { $('like').textContent = '♥ ' + r.likes; $('like').classList.toggle('on', r.liked); }).catch(fail);
-  $('cb').onclick = () => api('/videos/' + id + '/comments', { method: 'POST', json: { body: $('ci').value } }).then(() => watch(id, true)).catch(fail);
-  if ($('del')) $('del').onclick = () => confirm('Delete this video for everyone?') && api('/videos/' + id, { method: 'DELETE' }).then(home);
-}
+      <form id="formCode" class="hidden" onsubmit="submitCode(event)">
+        <h2>Redeem access code</h2>
+        <label>Access code</label>
+        <input id="codeInput" type="text" placeholder="XXXXX-XXXXX" required />
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="primary">Unlock</button>
+          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
+        </div>
+      </form>
 
-function unlock(msg) {
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Unlock videos</h2>
-    <p class="meta" style="margin:0">${msg || 'Enter the access code the owner sent you.'}</p>
-    <input id="code" type="text" placeholder="XXXXX-XXXXX" aria-label="Access code" autocapitalize="characters" autocomplete="off">
-    <div class="err" id="err"></div><button class="btn" id="go">Unlock</button>
-    <button class="link" data-go="contact">No code yet? Contact the owner</button></div>`;
-  $('go').onclick = () => api('/redeem', { method: 'POST', json: { code: $('code').value } })
-    .then(async () => { me = await api('/me'); nav(); home(); }).catch(e => $('err').textContent = e.message);
-}
+      <form id="formOwner" class="hidden" onsubmit="submitOwnerLogin(event)">
+        <h2>Owner login</h2>
+        <label>Owner password</label>
+        <input id="ownerPassword" type="password" placeholder="Owner password" required />
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="primary">Log in</button>
+          <button type="button" class="ghost" onclick="closeAuthModal()">Close</button>
+        </div>
+      </form>
 
-function contact() {
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Contact the owner</h2>
-    <p class="meta" style="margin:0">Ask for an access code or send a question. The owner replies using the contact info you give.</p>
-    <input id="n" type="text" placeholder="Your name" aria-label="Your name">
-    <input id="ct" type="text" placeholder="Email or WhatsApp number" aria-label="Email or WhatsApp number">
-    <textarea id="m" rows="4" placeholder="Your message" aria-label="Your message"></textarea>
-    <div class="err" id="err"></div><button class="btn" id="send">Send</button></div>`;
-  $('send').onclick = () => api('/contact', { method: 'POST', json: { name: $('n').value, contact: $('ct').value, message: $('m').value } })
-    .then(() => app.innerHTML = '<div class="box"><p class="ok">Message sent.</p><p>The owner will reply using the contact info you gave.</p></div>')
-    .catch(e => $('err').textContent = e.message);
-}
+      <div id="authMsg"></div>
+    </div>
 
-function uploadForm() {
-  if (!me) return unlock('Unlock first to upload videos.');
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Upload a video</h2>
-    <input id="f" type="file" accept="video/*" aria-label="Video file">
-    <input id="t" type="text" placeholder="Title" aria-label="Title">
-    <input id="d" type="text" placeholder="Description (optional)" aria-label="Description">
-    <p class="meta" style="margin:0">Max 300 MB. Only the owner can delete videos.</p>
-    <div class="err" id="err"></div><button class="btn" id="go">Publish</button></div>`;
-  $('f').onchange = () => { if ($('f').files[0] && !$('t').value) $('t').value = $('f').files[0].name.replace(/\.[^.]+$/, ''); };
-  $('go').onclick = async () => {
-    const fd = new FormData();
-    fd.append('title', $('t').value); fd.append('descr', $('d').value);
-    if ($('f').files[0]) fd.append('video', $('f').files[0]);
-    $('err').textContent = 'Uploading… keep this page open.';
-    try { const r = await api('/videos', { method: 'POST', body: fd }); watch(r.id); }
-    catch (e) { $('err').textContent = e.message; }
-  };
-}
+    <!-- Contact Card -->
+    <div id="contactCard" class="card hidden">
+      <h2>Contact owner</h2>
+      <form onsubmit="submitContact(event)">
+        <label>Your name</label>
+        <input id="cName" type="text" required />
+        <label>How to reach you</label>
+        <input id="cContact" type="text" required />
+        <label>Message</label>
+        <textarea id="cBody" required></textarea>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="primary">Send message</button>
+          <button type="button" class="ghost" onclick="closeContactModal()">Close</button>
+        </div>
+      </form>
+      <div id="contactMsg"></div>
+    </div>
 
-function adminLogin() {
-  app.innerHTML = `<div class="box"><h2 style="margin:0">Owner login</h2>
-    <input id="pw" type="password" placeholder="Owner password" aria-label="Owner password" autocomplete="current-password">
-    <div class="err" id="err"></div><button class="btn" id="go">Log in</button></div>`;
-  $('go').onclick = () => api('/admin/login', { method: 'POST', json: { password: $('pw').value } })
-    .then(async () => { me = await api('/me'); nav(); adminPanel(); }).catch(e => $('err').textContent = e.message);
-}
+    <!-- Upload Card -->
+    <div id="uploadCard" class="card hidden">
+      <h2>Upload video</h2>
+      <form onsubmit="submitUpload(event)">
+        <label>Title</label>
+        <input id="vTitle" type="text" required />
+        <label>Description</label>
+        <textarea id="vDescr"></textarea>
+        <label>Video file</label>
+        <input id="vFile" type="file" accept="video/*" required />
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button type="submit" class="primary">Upload</button>
+          <button type="button" class="ghost" onclick="toggleUpload(false)">Cancel</button>
+        </div>
+      </form>
+      <div id="uploadMsg"></div>
+    </div>
 
-async function adminPanel() {
-  if (!isAdmin()) return adminLogin();
-  const [msgs, codes] = await Promise.all([api('/admin/messages'), api('/admin/codes')]);
-  app.innerHTML = `<h2>Owner panel</h2>
-    <h3>Access codes</h3>
-    <div class="cm"><input id="lab" type="text" placeholder="Who is this code for?" aria-label="Who is this code for"><button class="btn" id="mk">Create code</button></div>
-    <div class="err" id="err"></div>
-    ${codes.map(c => `<div class="c"><b>${esc(c.label)}</b> <code>${esc(c.code)}</code> <button class="btn ghost sm" data-copy="${esc(c.code)}">Copy</button> <button class="btn ghost sm" data-rev="${c.id}">Revoke</button></div>`).join('') || '<p class="meta">No codes yet.</p>'}
-    <h3>Messages (${msgs.length})</h3>
-    ${msgs.map(m => `<div class="c"><b>${esc(m.name)}</b> · ${esc(m.contact)} <span class="meta">${ago(m.at)}</span><br>${esc(m.body)}<br><button class="btn ghost sm" data-dm="${m.id}">Delete</button></div>`).join('') || '<p class="meta">No messages yet.</p>'}`;
-  $('mk').onclick = () => api('/admin/codes', { method: 'POST', json: { label: $('lab').value } }).then(adminPanel).catch(e => $('err').textContent = e.message);
-}
+    <!-- Owner Panel -->
+    <div id="ownerPanel" class="card hidden">
+      <h2>Owner panel</h2>
+      <form onsubmit="createCode(event)" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+        <input id="codeLabel" type="text" placeholder="Label for new invite code" style="flex:1; min-width:180px;" required />
+        <button type="submit" class="primary">Generate code</button>
+      </form>
+      <div id="codesList" class="meta"></div>
+      <h3 style="margin-top:16px;">Messages</h3>
+      <div id="messagesList" class="meta"></div>
+    </div>
 
-document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-go],[data-id],[data-copy],[data-rev],[data-dm]');
-  if (!t) return;
-  try {
-    if (t.dataset.id) { me ? watch(t.dataset.id) : unlock('Enter your access code to watch this video.'); }
-    else if (t.dataset.copy) { await navigator.clipboard.writeText(t.dataset.copy); t.textContent = 'Copied'; return; }
-    else if (t.dataset.rev) { if (confirm('Revoke this code? That person loses access right away.')) { await api('/admin/codes/' + t.dataset.rev, { method: 'DELETE' }); adminPanel(); } return; }
-    else if (t.dataset.dm) { await api('/admin/messages/' + t.dataset.dm, { method: 'DELETE' }); adminPanel(); return; }
-    else {
-      const g = t.dataset.go;
-      if (g === 'logout') { await api('/logout', { method: 'POST' }); me = null; nav(); home(); }
-      else ({ home, unlock, contact, upload: uploadForm, adminlogin: adminLogin, admin: adminPanel })[g]();
+    <!-- Active Video Player & Comments -->
+    <div id="playerCard" class="card hidden">
+      <button class="ghost" style="margin-bottom:10px;" onclick="closePlayer()">&larr; Back to videos</button>
+      <video id="videoPlayer" controls controlsList="nodownload"></video>
+      <h2 id="pTitle" style="margin-top:12px;"></h2>
+      <div id="pMeta" class="meta"></div>
+      <p id="pDescr" style="white-space:pre-wrap; margin:10px 0;"></p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+        <button id="btnLike" onclick="toggleLike()">Like (<span id="likeCount">0</span>)</button>
+        <button id="btnDeleteVideo" class="danger hidden" onclick="deleteVideo()">Delete video</button>
+      </div>
+
+      <h3>Comments</h3>
+      <form onsubmit="postComment(event)" style="display:flex; gap:8px; margin-bottom:12px;">
+        <input id="commentInput" type="text" placeholder="Write a comment..." required />
+        <button type="submit" class="primary">Post</button>
+      </form>
+      <div id="commentsList"></div>
+    </div>
+
+    <!-- Video Feed -->
+    <div id="feedSection">
+      <div id="videoGrid" class="video-grid"></div>
+    </div>
+  </div>
+
+  <script>
+    let me = null;
+    let currentVideoId = null;
+
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+    async function api(url, opts = {}) {
+      const res = await fetch(url, opts);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Request failed.');
+      return data;
     }
-    window.scrollTo(0, 0);
-  } catch (err) { app.innerHTML = '<div class="empty"><p>' + esc(err.message) + '</p></div>'; }
-});
-$('q').oninput = () => home();
-(async () => { try { me = await api('/me'); } catch {} nav(); home(); })();
-</script>
+
+    async function refreshMe() {
+      me = await api('/api/me');
+      const isLoggedIn = !!me;
+      const isAdmin = me && me.role === 'admin';
+      document.getElementById('btnUnlock').classList.toggle('hidden', isLoggedIn);
+      document.getElementById('btnLogout').classList.toggle('hidden', !isLoggedIn);
+      document.getElementById('btnUploadToggle').classList.toggle('hidden', !isLoggedIn);
+      document.getElementById('btnOwnerPanelToggle').classList.toggle('hidden', !isAdmin);
+      document.getElementById('btnDeleteVideo').classList.toggle('hidden', !isAdmin);
+      const badge = document.getElementById('userBadge');
+      if (isLoggedIn) {
+        badge.textContent = `${me.name} (${me.role})`;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+        document.getElementById('ownerPanel').classList.add('hidden');
+        document.getElementById('uploadCard').classList.add('hidden');
+      }
+      if (currentVideoId) openVideo(currentVideoId, true);
+    }
+
+    function openAuthModal(tab = 'register') {
+      document.getElementById('authCard').classList.remove('hidden');
+      document.getElementById('contactCard').classList.add('hidden');
+      switchAuthTab(tab);
+    }
+    function closeAuthModal() {
+      document.getElementById('authCard').classList.add('hidden');
+      document.getElementById('authMsg').innerHTML = '';
+    }
+    function switchAuthTab(tab) {
+      for (const t of ['register', 'login', 'code', 'owner']) {
+        document.getElementById('form' + t[0].toUpperCase() + t.slice(1)).classList.toggle('hidden', t !== tab);
+        document.getElementById('tab' + t[0].toUpperCase() + t.slice(1)).className = (t === tab) ? 'active-tab' : 'ghost';
+      }
+      document.getElementById('authMsg').innerHTML = '';
+    }
+
+    async function submitRegister(e) {
+      e.preventDefault();
+      try {
+        await api('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('regUsername').value,
+            password: document.getElementById('regPassword').value,
+          }),
+        });
+        closeAuthModal();
+        await refreshMe();
+      } catch (err) {
+        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      try {
+        await api('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('loginUsername').value,
+            password: document.getElementById('loginPassword').value,
+          }),
+        });
+        closeAuthModal();
+        await refreshMe();
+      } catch (err) {
+        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function submitCode(e) {
+      e.preventDefault();
+      try {
+        await api('/api/redeem', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: document.getElementById('codeInput').value }),
+        });
+        closeAuthModal();
+        await refreshMe();
+      } catch (err) {
+        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function submitOwnerLogin(e) {
+      e.preventDefault();
+      try {
+        await api('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: document.getElementById('ownerPassword').value }),
+        });
+        closeAuthModal();
+        await refreshMe();
+      } catch (err) {
+        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function logout() {
+      await api('/api/logout', { method: 'POST' });
+      await refreshMe();
+    }
+
+    function openContactModal() {
+      document.getElementById('contactCard').classList.remove('hidden');
+      document.getElementById('authCard').classList.add('hidden');
+    }
+    function closeContactModal() {
+      document.getElementById('contactCard').classList.add('hidden');
+      document.getElementById('contactMsg').innerHTML = '';
+    }
+    async function submitContact(e) {
+      e.preventDefault();
+      try {
+        await api('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('cName').value,
+            contact: document.getElementById('cContact').value,
+            message: document.getElementById('cBody').value,
+          }),
+        });
+        document.getElementById('contactMsg').innerHTML = '<div class="msg-ok">Message sent.</div>';
+        e.target.reset();
+      } catch (err) {
+        document.getElementById('contactMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    function toggleUpload(force) {
+      const el = document.getElementById('uploadCard');
+      el.classList.toggle('hidden', force !== undefined ? !force : !el.classList.contains('hidden'));
+    }
+
+    async function submitUpload(e) {
+      e.preventDefault();
+      const fd = new FormData();
+      fd.append('title', document.getElementById('vTitle').value);
+      fd.append('descr', document.getElementById('vDescr').value);
+      fd.append('video', document.getElementById('vFile').files[0]);
+      try {
+        await api('/api/videos', { method: 'POST', body: fd });
+        document.getElementById('uploadMsg').innerHTML = '<div class="msg-ok">Uploaded!</div>';
+        e.target.reset();
+        await loadVideos();
+      } catch (err) {
+        document.getElementById('uploadMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function loadVideos() {
+      const q = encodeURIComponent(document.getElementById('searchInput').value || '');
+      const list = await api(`/api/videos?q=${q}`);
+      const grid = document.getElementById('videoGrid');
+      if (!list.length) {
+        grid.innerHTML = '<div class="meta">No videos yet.</div>';
+        return;
+      }
+      grid.innerHTML = list.map(v => `
+        <div class="video-tile" onclick="openVideo(${v.id})">
+          <div style="font-weight:700;">${esc(v.title)}</div>
+          <div class="meta">by ${esc(v.author || 'Member')} &middot; ${v.views} views &middot; ${v.likes} likes</div>
+        </div>
+      `).join('');
+    }
+
+    async function openVideo(id, noview = false) {
+      currentVideoId = id;
+      try {
+        const v = await api(`/api/videos/${id}${noview ? '?noview=1' : ''}`);
+        document.getElementById('playerCard').classList.remove('hidden');
+        document.getElementById('pTitle').textContent = v.title;
+        document.getElementById('pMeta').textContent = `by ${v.author || 'Member'} · ${v.views} views`;
+        document.getElementById('pDescr').textContent = v.descr || '';
+        document.getElementById('likeCount').textContent = v.likes;
+        document.getElementById('btnDeleteVideo').classList.toggle('hidden', !(me && me.role === 'admin'));
+        const player = document.getElementById('videoPlayer');
+        if (!noview) player.src = `/stream/${id}`;
+        renderComments(v.comments || []);
+      } catch (err) {
+        openAuthModal('register');
+        document.getElementById('authMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
+    function closePlayer() {
+      currentVideoId = null;
+      document.getElementById('videoPlayer').pause();
+      document.getElementById('videoPlayer').removeAttribute('src');
+      document.getElementById('playerCard').classList.add('hidden');
+      loadVideos();
+    }
+
+    function showHome() {
+      closePlayer();
+      document.getElementById('authCard').classList.add('hidden');
+      document.getElementById('contactCard').classList.add('hidden');
+    }
+
+    async function toggleLike() {
+      if (!currentVideoId) return;
+      try {
+        const r = await api(`/api/videos/${currentVideoId}/like`, { method: 'POST' });
+        document.getElementById('likeCount').textContent = r.likes;
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function postComment(e) {
+      e.preventDefault();
+      if (!currentVideoId) return;
+      const body = document.getElementById('commentInput').value;
+      try {
+        await api(`/api/videos/${currentVideoId}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body }),
+        });
+        document.getElementById('commentInput').value = '';
+        await openVideo(currentVideoId, true);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function renderComments(comments) {
+      const isAdmin = me && me.role === 'admin';
+      const box = document.getElementById('commentsList');
+      if (!comments.length) {
+        box.innerHTML = '<div class="meta">No comments yet.</div>';
+        return;
+      }
+      box.innerHTML = comments.map(c => `
+        <div class="comment">
+          <div>
+            <div style="font-weight:600; font-size:13px;">${esc(c.author || 'Member')}</div>
+            <div style="margin-top:4px; font-size:14px;">${esc(c.body)}</div>
+          </div>
+          ${isAdmin ? `<button class="danger" onclick="deleteComment(${c.id})">Delete</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function deleteComment(commentId) {
+      try {
+        await api(`/api/comments/${commentId}`, { method: 'DELETE' });
+        if (currentVideoId) await openVideo(currentVideoId, true);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteVideo() {
+      if (!currentVideoId) return;
+      try {
+        await api(`/api/videos/${currentVideoId}`, { method: 'DELETE' });
+        closePlayer();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function toggleOwnerPanel() {
+      const panel = document.getElementById('ownerPanel');
+      const show = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !show);
+      if (show) await loadOwnerData();
+    }
+
+    async function loadOwnerData() {
+      const [codes, msgs] = await Promise.all([api('/api/admin/codes'), api('/api/admin/messages')]);
+      document.getElementById('codesList').innerHTML = codes.map(c =>
+        `<div style="margin:4px 0;"><b>${esc(c.code)}</b> — ${esc(c.label)}</div>`
+      ).join('') || 'No codes yet.';
+      document.getElementById('messagesList').innerHTML = msgs.map(m =>
+        `<div style="margin:6px 0;"><b>${esc(m.name)}</b> (${esc(m.contact)}): ${esc(m.body)}</div>`
+      ).join('') || 'No messages yet.';
+    }
+
+    async function createCode(e) {
+      e.preventDefault();
+      await api('/api/admin/codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: document.getElementById('codeLabel').value }),
+      });
+      document.getElementById('codeLabel').value = '';
+      await loadOwnerData();
+    }
+
+    (async () => {
+      await refreshMe();
+      await loadVideos();
+    })();
+  </script>
 </body>
 </html>

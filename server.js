@@ -21,6 +21,7 @@ fs.mkdirSync(UPLOADS, { recursive: true });
 const db = new Database(path.join(DATA, 'reba.db'));
 db.exec(`
   CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY, code TEXT UNIQUE, label TEXT, at INTEGER);
+  CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE, pass_hash TEXT, salt TEXT, at INTEGER);
   CREATE TABLE IF NOT EXISTS videos(id INTEGER PRIMARY KEY, title TEXT, descr TEXT, file TEXT, mime TEXT, author TEXT, views INTEGER DEFAULT 0, at INTEGER);
   CREATE TABLE IF NOT EXISTS likes(who TEXT, video_id INTEGER, PRIMARY KEY(who, video_id));
   CREATE TABLE IF NOT EXISTS comments(id INTEGER PRIMARY KEY, video_id INTEGER, author TEXT, body TEXT, at INTEGER);
@@ -31,7 +32,19 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '20kb' }));
 
-// ---------- Sessions (one cookie: owner or code-holder) ----------
+// ---------- Password helpers ----------
+const hashPass = (pw, salt = crypto.randomBytes(16).toString('hex')) => ({
+  salt,
+  hash: crypto.scryptSync(pw, salt, 64).toString('hex'),
+});
+const same = (a, b) => crypto.timingSafeEqual(crypto.createHash('sha256').update(a).digest(), crypto.createHash('sha256').update(b).digest());
+const verifyPass = (pw, salt, expectedHash) => {
+  const actual = crypto.scryptSync(pw, salt, 64);
+  const expected = Buffer.from(expectedHash, 'hex');
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+};
+
+// ---------- Sessions (one cookie: owner, user, or code-holder) ----------
 const readCookie = (req, k) => {
   const m = (req.headers.cookie || '').split(/;\s*/).find(c => c.startsWith(k + '='));
   return m ? decodeURIComponent(m.slice(k.length + 1)) : null;
@@ -45,7 +58,10 @@ app.use((req, res, next) => {
     try {
       const p = jwt.verify(t, SECRET);
       if (p.role === 'admin') req.user = { role: 'admin', who: 'a', name: 'Owner' };
-      else if (p.role === 'viewer') {
+      else if (p.role === 'user') {
+        const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(p.id);
+        if (u) req.user = { role: 'user', who: 'u' + u.id, name: u.username };
+      } else if (p.role === 'viewer') {
         // Checked on every request, so revoking a code locks that person out immediately
         const c = db.prepare('SELECT * FROM codes WHERE id = ?').get(p.id);
         if (c) req.user = { role: 'viewer', who: 'c' + c.id, name: c.label };
@@ -54,7 +70,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-const member = (req, res, next) => req.user ? next() : res.status(401).json({ error: 'Enter your access code first.' });
+const member = (req, res, next) => req.user ? next() : res.status(401).json({ error: 'Create an account, sign in, or enter an access code first.' });
 const admin = (req, res, next) => req.user && req.user.role === 'admin' ? next() : res.status(403).json({ error: 'Owner only.' });
 
 const hits = new Map();
@@ -64,10 +80,39 @@ const limit = (name, max, ms) => (req, res, next) => {
   if (a.length >= max) return res.status(429).json({ error: 'Too many tries. Please wait a while.' });
   a.push(now); hits.set(k, a); next();
 };
-const same = (a, b) => crypto.timingSafeEqual(crypto.createHash('sha256').update(a).digest(), crypto.createHash('sha256').update(b).digest());
 
 // ---------- Public ----------
 app.get('/api/me', (req, res) => res.json(req.user ? { role: req.user.role, name: req.user.name } : null));
+
+app.post('/api/register', limit('register', 10, 3600e3), (req, res) => {
+  const username = String(req.body.username || '').trim().slice(0, 30);
+  const password = String(req.body.password || '');
+  if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3-30 characters (letters, numbers, ., _, -).' });
+  }
+  if (password.length < 6 || password.length > 128) {
+    return res.status(400).json({ error: 'Password must be between 6 and 128 characters.' });
+  }
+  const existing = db.prepare('SELECT id FROM users WHERE LOWER(username) = LOWER(?)').get(username);
+  if (existing) return res.status(409).json({ error: 'That username is already taken.' });
+
+  const { salt, hash } = hashPass(password);
+  const r = db.prepare('INSERT INTO users(username, pass_hash, salt, at) VALUES(?, ?, ?, ?)').run(username, hash, salt, Date.now());
+  setSession(req, res, { role: 'user', id: r.lastInsertRowid });
+  res.json({ role: 'user', name: username });
+});
+
+app.post('/api/login', limit('login', 15, 900e3), (req, res) => {
+  const username = String(req.body.username || '').trim();
+  const password = String(req.body.password || '');
+  if (!username || !password) return res.status(400).json({ error: 'Enter your username and password.' });
+  const u = db.prepare('SELECT id, username, pass_hash, salt FROM users WHERE LOWER(username) = LOWER(?)').get(username);
+  if (!u || !verifyPass(password, u.salt, u.pass_hash)) {
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  }
+  setSession(req, res, { role: 'user', id: u.id });
+  res.json({ role: 'user', name: u.username });
+});
 
 app.post('/api/contact', limit('contact', 5, 3600e3), (req, res) => {
   const name = String(req.body.name || '').trim().slice(0, 80);
@@ -103,14 +148,14 @@ app.get('/api/videos', (req, res) => {
   res.json(db.prepare(LIST + ' WHERE v.title LIKE ? ORDER BY v.at DESC LIMIT 100').all('%' + String(req.query.q || '') + '%'));
 });
 
-// ---------- Members (code holders and owner) ----------
+// ---------- Members (account holders, code holders, and owner) ----------
 app.get('/api/videos/:id', member, (req, res) => {
   const v = db.prepare(LIST + ' WHERE v.id = ?').get(req.params.id);
   if (!v) return res.status(404).json({ error: 'Video not found.' });
   if (!req.query.noview) { db.prepare('UPDATE videos SET views = views + 1 WHERE id = ?').run(v.id); v.views++; }
   v.descr = db.prepare('SELECT descr FROM videos WHERE id = ?').get(v.id).descr;
   v.liked = !!db.prepare('SELECT 1 FROM likes WHERE who = ? AND video_id = ?').get(req.user.who, v.id);
-  v.comments = db.prepare('SELECT author, body, at FROM comments WHERE video_id = ? ORDER BY at DESC').all(v.id);
+  v.comments = db.prepare('SELECT id, author, body, at FROM comments WHERE video_id = ? ORDER BY at DESC').all(v.id);
   res.json(v);
 });
 
@@ -164,6 +209,12 @@ app.get('/stream/:id', member, (req, res) => {
 });
 
 // ---------- Owner only ----------
+app.delete('/api/comments/:id', admin, (req, res) => {
+  const r = db.prepare('DELETE FROM comments WHERE id = ?').run(req.params.id);
+  if (!r.changes) return res.status(404).json({ error: 'Comment not found.' });
+  res.json({ ok: true });
+});
+
 app.delete('/api/videos/:id', admin, (req, res) => {
   const v = db.prepare('SELECT file FROM videos WHERE id = ?').get(req.params.id);
   if (!v) return res.status(404).json({ error: 'Not found.' });
