@@ -19,8 +19,10 @@ const UPLOADS = path.join(DATA, 'uploads');
 fs.mkdirSync(UPLOADS, { recursive: true });
 
 const db = new Database(path.join(DATA, 'reba.db'));
+try { db.exec('ALTER TABLE codes ADD COLUMN used_by TEXT'); } catch {}
+try { db.exec('ALTER TABLE codes ADD COLUMN used_at INTEGER'); } catch {}
 db.exec(`
-  CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY, code TEXT UNIQUE, label TEXT, at INTEGER);
+  CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY, code TEXT UNIQUE, label TEXT, at INTEGER, used_by TEXT, used_at INTEGER);
   CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE, pass_hash TEXT, salt TEXT, at INTEGER);
   CREATE TABLE IF NOT EXISTS direct_messages(id INTEGER PRIMARY KEY, user_id INTEGER, sender TEXT, body TEXT, at INTEGER);
   CREATE TABLE IF NOT EXISTS videos(id INTEGER PRIMARY KEY, title TEXT, descr TEXT, file TEXT, mime TEXT, author TEXT, views INTEGER DEFAULT 0, at INTEGER);
@@ -63,9 +65,11 @@ app.use((req, res, next) => {
         const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(p.id);
         if (u) req.user = { role: 'user', id: u.id, who: 'u' + u.id, name: u.username };
       } else if (p.role === 'viewer') {
-        // Checked on every request, so revoking a code locks that person out immediately
+        // Checked on every request: must exist and have a valid holder claim
         const c = db.prepare('SELECT * FROM codes WHERE id = ?').get(p.id);
-        if (c) req.user = { role: 'viewer', who: 'c' + c.id, name: c.label };
+        if (c && c.used_by && p.holder) {
+          req.user = { role: 'viewer', who: p.holder, name: c.label };
+        }
       }
     } catch {}
   }
@@ -128,7 +132,19 @@ app.post('/api/contact', limit('contact', 5, 3600e3), (req, res) => {
 app.post('/api/redeem', limit('redeem', 10, 900e3), (req, res) => {
   const c = db.prepare('SELECT * FROM codes WHERE code = ?').get(String(req.body.code || '').trim().toUpperCase());
   if (!c) return res.status(401).json({ error: 'That code is not valid.' });
-  setSession(req, res, { role: 'viewer', id: c.id });
+  const token = crypto.randomBytes(6).toString('hex');
+  const displayWho = (req.user && req.user.role === 'user')
+    ? `${req.user.name} (account #${req.user.id})`
+    : `Viewer #${token}`;
+  const holderKey = req.user ? `${req.user.who}:${token}` : `v-${token}`;
+  if (c.used_by) {
+    return res.status(409).json({ error: 'This view code has already been used by someone else (single-use only).' });
+  }
+  const resUpdate = db.prepare('UPDATE codes SET used_by = ?, used_at = ? WHERE id = ? AND used_by IS NULL').run(displayWho, Date.now(), c.id);
+  if (!resUpdate.changes) {
+    return res.status(409).json({ error: 'This view code has already been used by someone else (single-use only).' });
+  }
+  setSession(req, res, { role: 'viewer', id: c.id, holder: holderKey });
   res.json({ role: 'viewer', name: c.label });
 });
 
@@ -145,9 +161,16 @@ app.post('/api/logout', (req, res) => {
 
 // Titles are public; the files are not
 const LIST = `SELECT v.id, v.title, v.author, v.views, v.at,
-  (SELECT COUNT(*) FROM likes WHERE video_id = v.id) AS likes FROM videos v`;
+  (SELECT COUNT(*) FROM likes WHERE video_id = v.id) AS likes,
+  (SELECT COUNT(*) FROM comments WHERE video_id = v.id) AS comments FROM videos v`;
 app.get('/api/videos', (req, res) => {
-  res.json(db.prepare(LIST + ' WHERE v.title LIKE ? ORDER BY v.at DESC LIMIT 100').all('%' + String(req.query.q || '') + '%'));
+  const sortKey = String(req.query.sort || 'new').toLowerCase();
+  const sort = sortKey === 'views'
+    ? 'ORDER BY v.views DESC, v.at DESC'
+    : (sortKey === 'likes'
+      ? 'ORDER BY likes DESC, v.at DESC'
+      : 'ORDER BY v.at DESC');
+  res.json(db.prepare(`${LIST} WHERE v.title LIKE ? ${sort} LIMIT 100`).all('%' + String(req.query.q || '') + '%'));
 });
 
 // ---------- Account-holder direct messages ----------
@@ -187,8 +210,9 @@ app.post('/api/videos', member, upload.single('video'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Choose a video file.' });
   const title = String(req.body.title || '').trim().slice(0, 120);
   if (!title) { fs.unlink(req.file.path, () => {}); return res.status(400).json({ error: 'Add a title.' }); }
+  const authorName = req.user.role === 'admin' ? 'Owner' : req.user.name;
   const r = db.prepare('INSERT INTO videos(title, descr, file, mime, author, at) VALUES(?, ?, ?, ?, ?, ?)')
-    .run(title, String(req.body.descr || '').slice(0, 2000), req.file.filename, req.file.mimetype, req.user.name, Date.now());
+    .run(title, String(req.body.descr || '').slice(0, 2000), req.file.filename, req.file.mimetype, authorName, Date.now());
   res.json({ id: r.lastInsertRowid });
 });
 
@@ -205,14 +229,21 @@ app.post('/api/videos/:id/comments', member, (req, res) => {
   res.json({ ok: true });
 });
 
-// Video bytes only go to members. Not a public folder, no download button, nothing cached.
+// Video bytes only go to members (any valid access code unlocks every video). Stream-only (no download).
 app.get('/stream/:id', member, (req, res) => {
   const v = db.prepare('SELECT file, mime FROM videos WHERE id = ?').get(req.params.id);
   if (!v) return res.sendStatus(404);
   const p = path.join(UPLOADS, v.file);
   let size;
   try { size = fs.statSync(p).size; } catch { return res.sendStatus(404); }
-  const h = { 'Content-Type': v.mime || 'video/mp4', 'Accept-Ranges': 'bytes', 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline', 'X-Content-Type-Options': 'nosniff' };
+  const h = {
+    'Content-Type': v.mime || 'video/mp4',
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+    'Pragma': 'no-cache',
+    'Content-Disposition': 'inline',
+    'X-Content-Type-Options': 'nosniff',
+  };
   const m = req.headers.range && /bytes=(\d*)-(\d*)/.exec(req.headers.range);
   if (!m) { res.writeHead(200, { ...h, 'Content-Length': size }); return fs.createReadStream(p).pipe(res); }
   let s = m[1] ? parseInt(m[1]) : 0, e = m[2] ? parseInt(m[2]) : size - 1;
@@ -270,7 +301,24 @@ app.post('/api/admin/codes', admin, (req, res) => {
   db.prepare('INSERT INTO codes(code, label, at) VALUES(?, ?, ?)').run(code, label, Date.now());
   res.json({ code });
 });
-app.delete('/api/admin/codes/:id', admin, (req, res) => { db.prepare('DELETE FROM codes WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
+app.delete('/api/admin/codes/:id', admin, (req, res) => {
+  const codeId = Number(req.params.id);
+  if (!Number.isInteger(codeId) || codeId <= 0) return res.status(400).json({ error: 'Invalid code ID.' });
+  const r = db.prepare('DELETE FROM codes WHERE id = ?').run(codeId);
+  if (!r.changes) return res.status(404).json({ error: 'Code not found.' });
+  res.json({ ok: true });
+});
+
+app.get('/api/admin/comments', admin, (req, res) => {
+  const rows = db.prepare(`
+    SELECT c.id, c.video_id, c.author, c.body, c.at, v.title AS video_title
+    FROM comments c
+    LEFT JOIN videos v ON v.id = c.video_id
+    ORDER BY c.at DESC
+    LIMIT 200
+  `).all();
+  res.json(rows);
+});
 
 app.get('/api/admin/messages', admin, (req, res) => res.json(db.prepare('SELECT * FROM messages ORDER BY at DESC LIMIT 200').all()));
 app.delete('/api/admin/messages/:id', admin, (req, res) => { db.prepare('DELETE FROM messages WHERE id = ?').run(req.params.id); res.json({ ok: true }); });
