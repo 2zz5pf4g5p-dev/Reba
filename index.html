@@ -9,59 +9,67 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0c1712;
-      color: #eef5f0;
+      background: #070709;
+      color: #f5f2f3;
       min-height: 100vh;
     }
     .wrap { max-width: 820px; margin: 0 auto; padding: 18px 16px 64px; }
     .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .brand { font-size: 20px; font-weight: 700; color: #fff; text-decoration: none; margin-right: 4px; }
-    .search { flex: 1; min-width: 180px; background: #14241c; border: 1px solid #264234; color: #fff; padding: 9px 12px; border-radius: 999px; font-size: 14px; }
+    .brand { font-size: 20px; font-weight: 800; color: #ff2e3b; text-decoration: none; margin-right: 4px; letter-spacing: 0.2px; }
+    .search { flex: 1; min-width: 180px; background: #141012; border: 1px solid #35181c; color: #fff; padding: 9px 12px; border-radius: 999px; font-size: 14px; }
+    .search:focus { outline: none; border-color: #e11d2a; }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; align-items: center; }
-    button, .btn {
-      background: #1b2e24;
-      color: #e6f2eb;
-      border: 1px solid #2f5240;
+    button, .btn, select {
+      background: #171012;
+      color: #f5e9ec;
+      border: 1px solid #3b191e;
       border-radius: 999px;
       padding: 8px 14px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
     }
-    button.primary { background: #36b368; color: #07140c; border-color: #36b368; }
-    button.danger { background: #3a171b; color: #ff9aa2; border-color: #6e272f; padding: 5px 10px; font-size: 12px; }
-    button.ghost { background: transparent; border-color: #264234; color: #a9c4b5; }
-    button.active-tab { background: #264234; color: #fff; border-color: #487a60; }
+    button:hover, .btn:hover { border-color: #e11d2a; }
+    select { border-radius: 10px; background: #0c090a; }
+    button.primary { background: #dc1f2d; color: #ffffff; border-color: #dc1f2d; }
+    button.primary:hover { background: #ef2837; border-color: #ef2837; }
+    button.danger { background: #2b0b10; color: #ff7a84; border-color: #6b1924; padding: 5px 10px; font-size: 12px; }
+    button.ghost { background: transparent; border-color: #2f171b; color: #c7a9af; }
+    button.active-tab { background: #2a0d12; color: #ffffff; border-color: #dc1f2d; }
     .card {
-      background: #122119;
-      border: 1px solid #223b2e;
+      background: #110d0f;
+      border: 1px solid #2b1418;
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 16px;
     }
-    h2, h3 { margin: 0 0 10px; font-size: 17px; }
-    label { display: block; font-size: 12px; color: #9ab5a6; margin: 10px 0 4px; }
+    h2, h3 { margin: 0 0 10px; font-size: 17px; color: #ffffff; }
+    label { display: block; font-size: 12px; color: #b89ba1; margin: 10px 0 4px; }
     input, textarea {
       width: 100%;
-      background: #0b1410;
-      border: 1px solid #294738;
+      background: #0a0809;
+      border: 1px solid #33171b;
       color: #fff;
       border-radius: 10px;
       padding: 10px 12px;
       font-size: 14px;
       font-family: inherit;
     }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #e11d2a; }
     textarea { min-height: 80px; resize: vertical; }
-    .msg-err { color: #ff8a93; font-size: 13px; margin-top: 8px; }
-    .msg-ok { color: #5ce08e; font-size: 13px; margin-top: 8px; }
+    .msg-err { color: #ff6b76; font-size: 13px; margin-top: 8px; }
+    .msg-ok { color: #ff9ea5; font-size: 13px; margin-top: 8px; }
     .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-    .video-tile { background: #122119; border: 1px solid #223b2e; border-radius: 14px; padding: 14px; cursor: pointer; }
-    .video-tile:hover { border-color: #36b368; }
-    .meta { font-size: 12px; color: #8da899; margin-top: 6px; }
+    .video-tile { background: #110d0f; border: 1px solid #2b1418; border-radius: 14px; padding: 14px; cursor: pointer; }
+    .video-tile:hover { border-color: #dc1f2d; }
+    .meta { font-size: 12px; color: #a3898f; margin-top: 6px; }
     video { width: 100%; border-radius: 12px; background: #000; max-height: 440px; }
-    .comment { border-top: 1px solid #1e3529; padding: 10px 0; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .comment { border-top: 1px solid #241216; padding: 10px 0; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
     .comment:first-child { border-top: none; }
-    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #182b21; font-size: 12px; color: #a9d5ba; }
+    .dm-box { background: #090708; border: 1px solid #2b1418; border-radius: 12px; padding: 10px 12px; max-height: 240px; overflow-y: auto; margin-bottom: 10px; }
+    .dm-item { padding: 6px 0; border-bottom: 1px solid #1c0e11; font-size: 13px; }
+    .dm-item:last-child { border-bottom: none; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #240c10; border: 1px solid #591822; font-size: 12px; color: #ff7e88; }
     .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .hidden { display: none !important; }
   </style>
@@ -77,6 +85,7 @@
       <button id="btnUnlock" class="primary" onclick="openAuthModal('register')">Create account / Sign in</button>
       <button id="btnContact" onclick="openContactModal()">Contact owner</button>
       <span id="userBadge" class="pill hidden"></span>
+      <button id="btnInboxToggle" class="hidden" onclick="toggleUserInbox()">Messages from owner</button>
       <button id="btnUploadToggle" class="hidden" onclick="toggleUpload()">Upload video</button>
       <button id="btnOwnerPanelToggle" class="hidden" onclick="toggleOwnerPanel()">Owner panel</button>
       <button id="btnLogout" class="ghost hidden" onclick="logout()">Log out</button>
@@ -138,6 +147,17 @@
       <div id="authMsg"></div>
     </div>
 
+    <!-- Account Holder Inbox -->
+    <div id="userInboxCard" class="card hidden">
+      <h2>Direct messages with owner</h2>
+      <div id="userDmThread" class="dm-box"></div>
+      <form onsubmit="sendUserDm(event)" style="display:flex; gap:8px;">
+        <input id="userDmInput" type="text" placeholder="Message the owner..." required />
+        <button type="submit" class="primary">Send</button>
+      </form>
+      <div id="userDmMsg"></div>
+    </div>
+
     <!-- Contact Card -->
     <div id="contactCard" class="card hidden">
       <h2>Contact owner</h2>
@@ -177,12 +197,27 @@
     <!-- Owner Panel -->
     <div id="ownerPanel" class="card hidden">
       <h2>Owner panel</h2>
+
+      <h3>Message an account user</h3>
+      <form onsubmit="sendOwnerDm(event)" style="margin-bottom:14px;">
+        <label>Select user account</label>
+        <select id="ownerDmUser" onchange="loadOwnerDmThread()" required></select>
+        <div id="ownerDmThread" class="dm-box" style="margin-top:10px;"></div>
+        <div style="display:flex; gap:8px;">
+          <input id="ownerDmInput" type="text" placeholder="Write a message to this user..." required />
+          <button type="submit" class="primary">Send</button>
+        </div>
+        <div id="ownerDmMsg"></div>
+      </form>
+
+      <h3>Generate access code</h3>
       <form onsubmit="createCode(event)" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
         <input id="codeLabel" type="text" placeholder="Label for new invite code" style="flex:1; min-width:180px;" required />
         <button type="submit" class="primary">Generate code</button>
       </form>
       <div id="codesList" class="meta"></div>
-      <h3 style="margin-top:16px;">Messages</h3>
+
+      <h3 style="margin-top:16px;">Contact messages</h3>
       <div id="messagesList" class="meta"></div>
     </div>
 
@@ -229,11 +264,18 @@
       me = await api('/api/me');
       const isLoggedIn = !!me;
       const isAdmin = me && me.role === 'admin';
+      const isAccountUser = me && me.role === 'user';
       document.getElementById('btnUnlock').classList.toggle('hidden', isLoggedIn);
+      document.getElementById('btnContact').classList.toggle('hidden', isAdmin);
+      document.getElementById('btnInboxToggle').classList.toggle('hidden', !isAccountUser);
       document.getElementById('btnLogout').classList.toggle('hidden', !isLoggedIn);
       document.getElementById('btnUploadToggle').classList.toggle('hidden', !isLoggedIn);
       document.getElementById('btnOwnerPanelToggle').classList.toggle('hidden', !isAdmin);
       document.getElementById('btnDeleteVideo').classList.toggle('hidden', !isAdmin);
+      if (isAdmin) {
+        document.getElementById('contactCard').classList.add('hidden');
+        document.getElementById('userInboxCard').classList.add('hidden');
+      }
       const badge = document.getElementById('userBadge');
       if (isLoggedIn) {
         badge.textContent = `${me.name} (${me.role})`;
@@ -242,6 +284,7 @@
         badge.classList.add('hidden');
         document.getElementById('ownerPanel').classList.add('hidden');
         document.getElementById('uploadCard').classList.add('hidden');
+        document.getElementById('userInboxCard').classList.add('hidden');
       }
       if (currentVideoId) openVideo(currentVideoId, true);
     }
@@ -334,7 +377,45 @@
       await refreshMe();
     }
 
+    async function toggleUserInbox() {
+      const card = document.getElementById('userInboxCard');
+      const show = card.classList.contains('hidden');
+      card.classList.toggle('hidden', !show);
+      if (show) await loadUserDmThread();
+    }
+
+    async function loadUserDmThread() {
+      const rows = await api('/api/dm');
+      const box = document.getElementById('userDmThread');
+      if (!rows.length) {
+        box.innerHTML = '<div class="meta">No messages yet.</div>';
+        return;
+      }
+      box.innerHTML = rows.map(m =>
+        `<div class="dm-item"><b>${esc(m.sender)}:</b> ${esc(m.body)}</div>`
+      ).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendUserDm(e) {
+      e.preventDefault();
+      const input = document.getElementById('userDmInput');
+      try {
+        await api('/api/dm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: input.value }),
+        });
+        input.value = '';
+        document.getElementById('userDmMsg').innerHTML = '';
+        await loadUserDmThread();
+      } catch (err) {
+        document.getElementById('userDmMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
+    }
+
     function openContactModal() {
+      if (me && me.role === 'admin') return;
       document.getElementById('contactCard').classList.remove('hidden');
       document.getElementById('authCard').classList.add('hidden');
     }
@@ -503,13 +584,66 @@
     }
 
     async function loadOwnerData() {
-      const [codes, msgs] = await Promise.all([api('/api/admin/codes'), api('/api/admin/messages')]);
+      const [codes, msgs, users] = await Promise.all([
+        api('/api/admin/codes'),
+        api('/api/admin/messages'),
+        api('/api/admin/users'),
+      ]);
+
+      const sel = document.getElementById('ownerDmUser');
+      const prev = sel.value;
+      if (!users.length) {
+        sel.innerHTML = '<option value="">No registered accounts yet</option>';
+        document.getElementById('ownerDmThread').innerHTML = '<div class="meta">Once visitors create an account, you can message them here.</div>';
+      } else {
+        sel.innerHTML = users.map(u => `<option value="${u.id}">${esc(u.username)}</option>`).join('');
+        if (prev && users.some(u => String(u.id) === String(prev))) sel.value = prev;
+        await loadOwnerDmThread();
+      }
+
       document.getElementById('codesList').innerHTML = codes.map(c =>
         `<div style="margin:4px 0;"><b>${esc(c.code)}</b> — ${esc(c.label)}</div>`
       ).join('') || 'No codes yet.';
       document.getElementById('messagesList').innerHTML = msgs.map(m =>
         `<div style="margin:6px 0;"><b>${esc(m.name)}</b> (${esc(m.contact)}): ${esc(m.body)}</div>`
       ).join('') || 'No messages yet.';
+    }
+
+    async function loadOwnerDmThread() {
+      const userId = document.getElementById('ownerDmUser').value;
+      const box = document.getElementById('ownerDmThread');
+      if (!userId) {
+        box.innerHTML = '<div class="meta">Select an account user to view or send messages.</div>';
+        return;
+      }
+      const data = await api(`/api/admin/dm/${encodeURIComponent(userId)}`);
+      if (!data.messages.length) {
+        box.innerHTML = `<div class="meta">No direct messages with ${esc(data.user.username)} yet.</div>`;
+        return;
+      }
+      box.innerHTML = data.messages.map(m =>
+        `<div class="dm-item"><b>${esc(m.sender)}:</b> ${esc(m.body)}</div>`
+      ).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendOwnerDm(e) {
+      e.preventDefault();
+      const userId = document.getElementById('ownerDmUser').value;
+      const input = document.getElementById('ownerDmInput');
+      if (!userId) return;
+      try {
+        await api(`/api/admin/dm/${encodeURIComponent(userId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: input.value }),
+        });
+        input.value = '';
+        document.getElementById('ownerDmMsg').innerHTML = '<div class="msg-ok">Sent.</div>';
+        await loadOwnerDmThread();
+      } catch (err) {
+        document.getElementById('ownerDmMsg').innerHTML = `<div class="msg-err">${esc(err.message)}</div>`;
+      }
     }
 
     async function createCode(e) {

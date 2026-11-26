@@ -22,6 +22,7 @@ const db = new Database(path.join(DATA, 'reba.db'));
 db.exec(`
   CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY, code TEXT UNIQUE, label TEXT, at INTEGER);
   CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE, pass_hash TEXT, salt TEXT, at INTEGER);
+  CREATE TABLE IF NOT EXISTS direct_messages(id INTEGER PRIMARY KEY, user_id INTEGER, sender TEXT, body TEXT, at INTEGER);
   CREATE TABLE IF NOT EXISTS videos(id INTEGER PRIMARY KEY, title TEXT, descr TEXT, file TEXT, mime TEXT, author TEXT, views INTEGER DEFAULT 0, at INTEGER);
   CREATE TABLE IF NOT EXISTS likes(who TEXT, video_id INTEGER, PRIMARY KEY(who, video_id));
   CREATE TABLE IF NOT EXISTS comments(id INTEGER PRIMARY KEY, video_id INTEGER, author TEXT, body TEXT, at INTEGER);
@@ -60,7 +61,7 @@ app.use((req, res, next) => {
       if (p.role === 'admin') req.user = { role: 'admin', who: 'a', name: 'Owner' };
       else if (p.role === 'user') {
         const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(p.id);
-        if (u) req.user = { role: 'user', who: 'u' + u.id, name: u.username };
+        if (u) req.user = { role: 'user', id: u.id, who: 'u' + u.id, name: u.username };
       } else if (p.role === 'viewer') {
         // Checked on every request, so revoking a code locks that person out immediately
         const c = db.prepare('SELECT * FROM codes WHERE id = ?').get(p.id);
@@ -71,6 +72,7 @@ app.use((req, res, next) => {
   next();
 });
 const member = (req, res, next) => req.user ? next() : res.status(401).json({ error: 'Create an account, sign in, or enter an access code first.' });
+const accountUser = (req, res, next) => req.user && req.user.role === 'user' ? next() : res.status(403).json({ error: 'Sign in with a user account first.' });
 const admin = (req, res, next) => req.user && req.user.role === 'admin' ? next() : res.status(403).json({ error: 'Owner only.' });
 
 const hits = new Map();
@@ -148,6 +150,19 @@ app.get('/api/videos', (req, res) => {
   res.json(db.prepare(LIST + ' WHERE v.title LIKE ? ORDER BY v.at DESC LIMIT 100').all('%' + String(req.query.q || '') + '%'));
 });
 
+// ---------- Account-holder direct messages ----------
+app.get('/api/dm', accountUser, (req, res) => {
+  const rows = db.prepare('SELECT id, sender, body, at FROM direct_messages WHERE user_id = ? ORDER BY at ASC LIMIT 200').all(req.user.id);
+  res.json(rows);
+});
+
+app.post('/api/dm', accountUser, limit('dm_user', 20, 600e3), (req, res) => {
+  const body = String(req.body.body || '').trim().slice(0, 1500);
+  if (!body) return res.status(400).json({ error: 'Write a message first.' });
+  db.prepare('INSERT INTO direct_messages(user_id, sender, body, at) VALUES(?, ?, ?, ?)').run(req.user.id, req.user.name, body, Date.now());
+  res.json({ ok: true });
+});
+
 // ---------- Members (account holders, code holders, and owner) ----------
 app.get('/api/videos/:id', member, (req, res) => {
   const v = db.prepare(LIST + ' WHERE v.id = ?').get(req.params.id);
@@ -209,6 +224,29 @@ app.get('/stream/:id', member, (req, res) => {
 });
 
 // ---------- Owner only ----------
+app.get('/api/admin/users', admin, (req, res) => {
+  const users = db.prepare('SELECT id, username, at FROM users ORDER BY username COLLATE NOCASE ASC').all();
+  res.json(users);
+});
+
+app.get('/api/admin/dm/:userId', admin, (req, res) => {
+  const userId = Number(req.params.userId);
+  const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(userId);
+  if (!u) return res.status(404).json({ error: 'User not found.' });
+  const messages = db.prepare('SELECT id, sender, body, at FROM direct_messages WHERE user_id = ? ORDER BY at ASC LIMIT 200').all(userId);
+  res.json({ user: u, messages });
+});
+
+app.post('/api/admin/dm/:userId', admin, (req, res) => {
+  const userId = Number(req.params.userId);
+  const u = db.prepare('SELECT id, username FROM users WHERE id = ?').get(userId);
+  if (!u) return res.status(404).json({ error: 'User not found.' });
+  const body = String(req.body.body || '').trim().slice(0, 1500);
+  if (!body) return res.status(400).json({ error: 'Write a message first.' });
+  db.prepare('INSERT INTO direct_messages(user_id, sender, body, at) VALUES(?, ?, ?, ?)').run(userId, 'Owner', body, Date.now());
+  res.json({ ok: true });
+});
+
 app.delete('/api/comments/:id', admin, (req, res) => {
   const r = db.prepare('DELETE FROM comments WHERE id = ?').run(req.params.id);
   if (!r.changes) return res.status(404).json({ error: 'Comment not found.' });
