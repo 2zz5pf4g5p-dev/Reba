@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const Database = require('better-sqlite3');
+const { DatabaseSync: Database } = require('node:sqlite');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const path = require('path');
