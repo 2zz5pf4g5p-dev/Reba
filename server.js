@@ -51,7 +51,21 @@ async function initDb() {
   `);
 }
 
+function getOwnerPassword() {
+  return (
+    process.env.ADMIN_PASSWORD ||
+    process.env.OWNER_PASSWORD ||
+    process.env.ADMIN_CODE ||
+    ''
+  );
+}
+
+function getJwtSecret() {
+  return process.env.JWT_SECRET || process.env.JWT_KEY || '';
+}
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static('.'));
 
 app.get('/health', async (req, res) => {
@@ -61,6 +75,59 @@ app.get('/health', async (req, res) => {
   } catch (err) {
     console.error('Healthcheck DB error:', err);
     res.status(500).json({ ok: false, error: 'Database unavailable' });
+  }
+});
+
+// Owner / Admin login route
+app.post(['/api/owner/login', '/api/admin/login', '/api/login'], (req, res) => {
+  const submitted =
+    req.body?.password ||
+    req.body?.ownerPassword ||
+    req.body?.adminPassword ||
+    req.body?.code ||
+    '';
+  const expected = getOwnerPassword();
+  const secret = getJwtSecret();
+
+  if (!expected || !secret) {
+    return res.status(500).json({ error: 'Server auth environment variables missing' });
+  }
+
+  if (!submitted || submitted !== expected) {
+    return res.status(401).json({ error: 'Invalid owner password' });
+  }
+
+  const token = jwt.sign({ role: 'owner' }, secret, { expiresIn: '7d' });
+  return res.json({ ok: true, token, role: 'owner' });
+});
+
+// Access code validation route backed by Postgres
+app.post(['/api/access-code', '/api/verify-code'], async (req, res) => {
+  const code = String(req.body?.code || req.body?.accessCode || '').trim();
+  const secret = getJwtSecret();
+
+  if (!code) {
+    return res.status(400).json({ error: 'Access code is required' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, code, used FROM access_codes WHERE code = $1',
+      [code]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid access code' });
+    }
+
+    const token = secret
+      ? jwt.sign({ role: 'member', code: rows[0].code }, secret, { expiresIn: '7d' })
+      : null;
+
+    return res.json({ ok: true, valid: true, token });
+  } catch (err) {
+    console.error('Access code check error:', err);
+    return res.status(500).json({ error: 'Failed to verify access code' });
   }
 });
 
