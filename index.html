@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reba</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1b7f4b">
+<style>
+:root{--bg:#f6f7f3;--surface:#fff;--ink:#17201a;--mute:#5f6b63;--line:#dfe4dc;--brand:#1b7f4b;--on:#fff;--like:#c8312f}
+@media (prefers-color-scheme:dark){:root{--bg:#121a15;--surface:#1b2620;--ink:#eef3ee;--mute:#9aa89e;--line:#2c3a31;--brand:#3fbf7f;--on:#08150d;--like:#ff6b68}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
+button,input,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px}
+.top{display:flex;gap:8px;align-items:center}
+.logo{font-weight:800;font-size:22px;color:var(--brand);background:none;border:0;cursor:pointer;padding:0;white-space:nowrap}
+.search{flex:1;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{padding:8px 14px;border:0;border-radius:999px;background:var(--brand);color:var(--on);font-weight:700;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.btn.on{background:var(--like);color:#fff}
+.btn.sm{padding:4px 10px;font-size:13px}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+main{max-width:1100px;margin:0 auto;padding:16px 14px 30px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px 14px}
+.card{background:none;border:0;padding:0;text-align:left;cursor:pointer;width:100%}
+.card video,.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:34px;pointer-events:none}
+.card h3{margin:8px 0 2px;font-size:15px}
+.meta{color:var(--mute);font-size:13px}
+.banner{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.empty{text-align:center;padding:50px 16px;color:var(--mute)}
+.watch{display:grid;gap:16px}
+@media(min-width:900px){.watch{grid-template-columns:1fr 320px}}
+.watch>section>video{width:100%;max-height:70vh;background:#000;border-radius:12px;display:block}
+h1{font-size:20px;margin:12px 0 4px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.desc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap}
+.cm{display:flex;gap:8px;margin:10px 0}
+input[type=text],input[type=password],textarea{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.c{padding:8px 0;border-bottom:1px solid var(--line)}
+.box{display:grid;gap:10px;max-width:440px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.err{color:var(--like);min-height:1.3em;font-size:14px}
+.ok{color:var(--brand);font-weight:700}
+.side .card{margin-bottom:12px}
+code{background:var(--bg);padding:2px 6px;border-radius:6px;font-size:15px}
+footer{text-align:center;padding:10px 0 24px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><button class="logo" data-go="home">▶ Reba</button><input class="search" id="q" type="search" placeholder="Search videos" aria-label="Search videos"></div>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+<footer><button class="link" data-go="adminlogin">Owner login</button></footer>
+<script>
+const $ = id => document.getElementById(id), app = $('app');
+let me = null;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ago = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.floor(m / 60) + ' h ago' : Math.floor(m / 1440) + ' d ago'; };
+const isAdmin = () => me && me.role === 'admin';
+
+async function api(path, opts = {}) {
+  const headers = {};
+  if (opts.json) { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(opts.json); }
+  const r = await fetch('/api' + path, { ...opts, headers });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Something went wrong.');
+  return d;
+}
+
+function nav() {
+  $('nav').innerHTML =
+    (me ? '<button class="btn" data-go="upload">Upload</button>' : '<button class="btn" data-go="unlock">Unlock videos</button>') +
+    '<button class="btn ghost" data-go="contact">Contact owner</button>' +
+    (isAdmin() ? '<button class="btn ghost" data-go="admin">Owner panel</button>' : '') +
+    (me ? '<button class="btn ghost" data-go="logout">Log out</button>' : '');
+}
+
+const card = v => `<button class="card" data-id="${v.id}">${me
+  ? `<video src="/stream/${v.id}#t=1" preload="metadata" muted playsinline></video>`
+  : '<div class="thumb">🔒</div>'}<h3>${esc(v.title)}</h3><div class="meta">${esc(v.author)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div></button>`;
+
+async function home() {
+  const list = await api('/videos?q=' + encodeURIComponent($('q').value));
+  const banner = me ? '' : `<div class="banner"><b>Videos here are private.</b> Contact the owner to get an access code, then tap “Unlock videos”.</div>`;
+  app.innerHTML = banner + (list.length ? `<div class="grid">${list.map(card).join('')}</div>` : '<div class="empty"><h2>No videos yet</h2></div>');
+}
+
+async function watch(id, noview) {
+  const [v, all] = await Promise.all([api('/videos/' + id + (noview ? '?noview=1' : '')), api('/videos')]);
+  app.innerHTML = `<div class="watch"><section>
+    <video src="/stream/${v.id}" controls autoplay playsinline controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false"></video>
+    <h1>${esc(v.title)}</h1>
+    <div class="meta">${esc(v.author)} · ${v.views} view${v.views === 1 ? '' : 's'} · ${ago(v.at)}</div>
+    <div class="row"><button class="btn ghost ${v.liked ? 'on' : ''}" id="like">♥ ${v.likes}</button>${isAdmin() ? '<button class="btn ghost" id="del">Delete video</button>' : ''}</div>
+    ${v.descr ? `<div class="desc">${esc(v.descr)}</div>` : ''}
+    <h2 style="font-size:17px">${v.comments.length} comment${v.comments.length === 1 ? '' : 's'}</h2>
+    <div class="cm"><input id="ci" type="text" placeholder="Add a comment" aria-label="Add a comment"><button class="btn" id="cb">Post</button></div>
+    <div class="err" id="err"></div>
+    ${v.comments.map(c => `<div class="c"><b>${esc(c.author)}</b> <span class="meta">${ago(c.at)}</span><br>${esc(c.body)}</div>`).join('')}
+  </section><aside class="side">${all.filter(x => x.id !== v.id).map(card).join('')}</aside></div>`;
+  const fail = e => $('err').textContent = e.message;
+  $('like').onclick = () => api('/videos/' + id + '/like', { method: 'POST' }).then(r => { $('like').textContent = '♥ ' + r.likes; $('like').classList.toggle('on', r.liked); }).catch(fail);
+  $('cb').onclick = () => api('/videos/' + id + '/comments', { method: 'POST', json: { body: $('ci').value } }).then(() => watch(id, true)).catch(fail);
+  if ($('del')) $('del').onclick = () => confirm('Delete this video for everyone?') && api('/videos/' + id, { method: 'DELETE' }).then(home);
+}
+
+function unlock(msg) {
+  app.innerHTML = `<div class="box"><h2 style="margin:0">Unlock videos</h2>
+    <p class="meta" style="margin:0">${msg || 'Enter the access code the owner sent you.'}</p>
+    <input id="code" type="text" placeholder="XXXXX-XXXXX" aria-label="Access code" autocapitalize="characters" autocomplete="off">
+    <div class="err" id="err"></div><button class="btn" id="go">Unlock</button>
+    <button class="link" data-go="contact">No code yet? Contact the owner</button></div>`;
+  $('go').onclick = () => api('/redeem', { method: 'POST', json: { code: $('code').value } })
+    .then(async () => { me = await api('/me'); nav(); home(); }).catch(e => $('err').textContent = e.message);
+}
+
+function contact() {
+  app.innerHTML = `<div class="box"><h2 style="margin:0">Contact the owner</h2>
+    <p class="meta" style="margin:0">Ask for an access code or send a question. The owner replies using the contact info you give.</p>
+    <input id="n" type="text" placeholder="Your name" aria-label="Your name">
+    <input id="ct" type="text" placeholder="Email or WhatsApp number" aria-label="Email or WhatsApp number">
+    <textarea id="m" rows="4" placeholder="Your message" aria-label="Your message"></textarea>
+    <div class="err" id="err"></div><button class="btn" id="send">Send</button></div>`;
+  $('send').onclick = () => api('/contact', { method: 'POST', json: { name: $('n').value, contact: $('ct').value, message: $('m').value } })
+    .then(() => app.innerHTML = '<div class="box"><p class="ok">Message sent.</p><p>The owner will reply using the contact info you gave.</p></div>')
+    .catch(e => $('err').textContent = e.message);
+}
+
+function uploadForm() {
+  if (!me) return unlock('Unlock first to upload videos.');
+  app.innerHTML = `<div class="box"><h2 style="margin:0">Upload a video</h2>
+    <input id="f" type="file" accept="video/*" aria-label="Video file">
+    <input id="t" type="text" placeholder="Title" aria-label="Title">
+    <input id="d" type="text" placeholder="Description (optional)" aria-label="Description">
+    <p class="meta" style="margin:0">Max 300 MB. Only the owner can delete videos.</p>
+    <div class="err" id="err"></div><button class="btn" id="go">Publish</button></div>`;
+  $('f').onchange = () => { if ($('f').files[0] && !$('t').value) $('t').value = $('f').files[0].name.replace(/\.[^.]+$/, ''); };
+  $('go').onclick = async () => {
+    const fd = new FormData();
+    fd.append('title', $('t').value); fd.append('descr', $('d').value);
+    if ($('f').files[0]) fd.append('video', $('f').files[0]);
+    $('err').textContent = 'Uploading… keep this page open.';
+    try { const r = await api('/videos', { method: 'POST', body: fd }); watch(r.id); }
+    catch (e) { $('err').textContent = e.message; }
+  };
+}
+
+function adminLogin() {
+  app.innerHTML = `<div class="box"><h2 style="margin:0">Owner login</h2>
+    <input id="pw" type="password" placeholder="Owner password" aria-label="Owner password" autocomplete="current-password">
+    <div class="err" id="err"></div><button class="btn" id="go">Log in</button></div>`;
+  $('go').onclick = () => api('/admin/login', { method: 'POST', json: { password: $('pw').value } })
+    .then(async () => { me = await api('/me'); nav(); adminPanel(); }).catch(e => $('err').textContent = e.message);
+}
+
+async function adminPanel() {
+  if (!isAdmin()) return adminLogin();
+  const [msgs, codes] = await Promise.all([api('/admin/messages'), api('/admin/codes')]);
+  app.innerHTML = `<h2>Owner panel</h2>
+    <h3>Access codes</h3>
+    <div class="cm"><input id="lab" type="text" placeholder="Who is this code for?" aria-label="Who is this code for"><button class="btn" id="mk">Create code</button></div>
+    <div class="err" id="err"></div>
+    ${codes.map(c => `<div class="c"><b>${esc(c.label)}</b> <code>${esc(c.code)}</code> <button class="btn ghost sm" data-copy="${esc(c.code)}">Copy</button> <button class="btn ghost sm" data-rev="${c.id}">Revoke</button></div>`).join('') || '<p class="meta">No codes yet.</p>'}
+    <h3>Messages (${msgs.length})</h3>
+    ${msgs.map(m => `<div class="c"><b>${esc(m.name)}</b> · ${esc(m.contact)} <span class="meta">${ago(m.at)}</span><br>${esc(m.body)}<br><button class="btn ghost sm" data-dm="${m.id}">Delete</button></div>`).join('') || '<p class="meta">No messages yet.</p>'}`;
+  $('mk').onclick = () => api('/admin/codes', { method: 'POST', json: { label: $('lab').value } }).then(adminPanel).catch(e => $('err').textContent = e.message);
+}
+
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-go],[data-id],[data-copy],[data-rev],[data-dm]');
+  if (!t) return;
+  try {
+    if (t.dataset.id) { me ? watch(t.dataset.id) : unlock('Enter your access code to watch this video.'); }
+    else if (t.dataset.copy) { await navigator.clipboard.writeText(t.dataset.copy); t.textContent = 'Copied'; return; }
+    else if (t.dataset.rev) { if (confirm('Revoke this code? That person loses access right away.')) { await api('/admin/codes/' + t.dataset.rev, { method: 'DELETE' }); adminPanel(); } return; }
+    else if (t.dataset.dm) { await api('/admin/messages/' + t.dataset.dm, { method: 'DELETE' }); adminPanel(); return; }
+    else {
+      const g = t.dataset.go;
+      if (g === 'logout') { await api('/logout', { method: 'POST' }); me = null; nav(); home(); }
+      else ({ home, unlock, contact, upload: uploadForm, adminlogin: adminLogin, admin: adminPanel })[g]();
+    }
+    window.scrollTo(0, 0);
+  } catch (err) { app.innerHTML = '<div class="empty"><p>' + esc(err.message) + '</p></div>'; }
+});
+$('q').oninput = () => home();
+(async () => { try { me = await api('/me'); } catch {} nav(); home(); })();
+</script>
+</body>
+</html>
